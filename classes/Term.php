@@ -30,6 +30,14 @@ class Term extends Abstract_Importer {
         $this->metadata = $term->metadata;
     }
 
-    protected function _save() { }
+    protected function _save() {
+
+        $ok = true;
+
+        // TODO: Add dependencies. Delete if it exists. Add this. Return true iff ok.
+
+        return $ok;
+
+    }
 
 }
