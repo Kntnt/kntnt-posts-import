@@ -4,7 +4,7 @@
 namespace Kntnt\Posts_Import;
 
 
-class Plugin extends Abstract_Plugin {
+final class Plugin extends Abstract_Plugin {
 
     use Logger;
     use Includes;
@@ -47,11 +47,24 @@ class Plugin extends Abstract_Plugin {
         return array_diff( $properties_or_class, self::public_properties_of( $object_or_array_of_properties ) );
     }
 
+    // Removes the element with the provided key and returns it value or
+    // $default if it didn't exist.
+    public static function peel_off( $key, &$array, $default = null ) {
+        if ( array_key_exists( $key, $array ) ) {
+            $val = $array[ $key ];
+            unset( $array[ $key ] );
+        }
+        else {
+            $val = $default;
+        }
+        return $val;
+    }
+
     public function classes_to_load() {
         return [
             'admin' => [
                 'admin_menu' => [
-                    'Tool',
+                    'Import_Tool',
                 ],
             ],
         ];

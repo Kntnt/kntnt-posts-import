@@ -48,9 +48,10 @@ abstract class Abstract_Importer {
     public function save() {
         $ok = true;
         if ( $this->unsaved ) {
+            $this->unsaved = false;
             $type = strtolower( substr( static::class, strrpos( static::class, '\\' ) + 1 ) );
             Plugin::log( "Saving %s with id = %s", $type, $this->id );
-            $ok = $this->save();
+            $ok = $this->_save();
             if ( ! $ok ) {
                 self::error( 'Error while saving %s with id = %s. See above.', $type, $this->id );
             }

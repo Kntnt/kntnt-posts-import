@@ -4,7 +4,7 @@
 namespace Kntnt\Posts_Import;
 
 
-class Attachment extends Abstract_Importer {
+final class Attachment extends Abstract_Importer {
 
     public $id;
 
@@ -26,6 +26,8 @@ class Attachment extends Abstract_Importer {
 
     public $metadata;
 
+    public $src;
+
     protected function __construct( $attachment ) {
         $this->id = $attachment->id;
         $this->slug = $attachment->slug;
@@ -37,16 +39,94 @@ class Attachment extends Abstract_Importer {
         $this->author = $attachment->author;
         $this->date = $attachment->date;
         $this->metadata = $attachment->metadata;
+        $this->src = $attachment->src;
     }
 
     protected function _save() {
 
         $ok = true;
 
-        // TODO: Add dependencies. Delete if it exists. Add this. Return true iff ok.
+        // Save dependencies
+        $ok &= $this->save_author();
+        $ok = apply_filters( 'kntnt-post-import-save-attachment-dependencies', $ok, $this );
+
+        // Delete pre-existing attachment
+        if ( $ok && $this->id_exists() ) {
+            Plugin::log( 'An older attachment or post exists with id = %s.', $this->id );
+            $deleted_post = wp_delete_post( $this->id, true );
+            if ( $deleted_post ) {
+                Plugin::log( 'Successfully deleted the older attachment or post with id = %s.', $this->id );
+            }
+            else {
+                Plugin::error( 'Failed to delete the older attachment or post with id = %s.', $this->id );
+                $ok = false;
+            }
+        }
+
+        $file = Plugin::peel_off( '_wp_attached_file', $this->metadata, false );
+        if ( $ok && $file ) {
+            $dst = Plugin::upload_dir( $file );
+            if ( $src = fopen( $this->src, 'r' ) ) {
+                if ( file_put_contents( $dst, $src ) ) {
+                    Plugin::log( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
+                }
+                else {
+                    Plugin::error( 'Failed to save %s to %s.', $this->src, $dst );
+                    $ok = false;
+                }
+            }
+            else {
+                Plugin::error( 'Failed to download %s to %s.', $this->src, $dst );
+                $ok = false;
+            }
+        }
+
+        // Insert attachment
+        if ( $ok ) {
+            $attachment = [
+                'post_type' => 'attachment',
+                'import_id' => $this->id,
+                'post_name' => $this->slug,
+                'post_title' => $this->title,
+                'post_content' => $this->content,
+                'post_excerpt' => $this->excerpt,
+                'post_author' => $this->author,
+                'post_date' => $this->date,
+                'post_status' => 'inherit',
+                'post_mime_type' => $this->mime_type,
+                'file' => $file,
+                'meta_input' => $this->metadata,
+            ];
+            $response = wp_insert_post( $attachment, true );
+            if ( is_wp_error( $response ) ) {
+                Plugin::error( 'Failed to insert $attachment with id = %s: %s', $this->id, $response->get_error_messages() );
+                $ok = false;
+            }
+            assert( $response == $this->id );
+        }
 
         return $ok;
 
+    }
+
+    private function save_author() {
+        $user = User::get( $this->author );
+        if ( $user ) {
+            $ok = $user->save();
+            if ( ! $ok ) {
+                self::error( 'Error while saving author with id = %s. See above.', $user->id );
+            }
+        }
+        else {
+            self::error( 'No user with id = %s.', $this->author );
+            $ok = false;
+        }
+        return $ok;
+    }
+
+    private function id_exists() {
+        global $wpdb;
+        return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE ID = %d", $this->id ) );
     }
 
 }

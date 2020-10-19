@@ -4,7 +4,7 @@
 namespace Kntnt\Posts_Import;
 
 
-class Post extends Abstract_Importer {
+final class Post extends Abstract_Importer {
 
     public $id;
 
@@ -21,6 +21,8 @@ class Post extends Abstract_Importer {
     public $author;
 
     public $date;
+
+    public $status;
 
     public $terms;
 
@@ -44,6 +46,7 @@ class Post extends Abstract_Importer {
         $this->excerpt = $post->excerpt;
         $this->author = $post->author;
         $this->date = $post->date;
+        $this->status = $post->status;
         $this->terms = $post->terms;
         $this->attachments = $post->attachments;
         $this->metadata = $post->metadata;
@@ -57,8 +60,46 @@ class Post extends Abstract_Importer {
         $ok &= $this->save_author();
         $ok &= $this->save_terms();
         $ok &= $this->save_attachments();
+        $ok = apply_filters( 'kntnt-post-import-save-post-dependencies', $ok, $this );
 
-        // TODO: Delete if it exists. Add this. Return true iff ok.
+        // Delete pre-existing post
+        if ( $ok && $this->id_exists() ) {
+            Plugin::log( 'An older post exists with id = %s.', $this->id );
+            $deleted_post = wp_delete_post( $this->id, true );
+            if ( $deleted_post ) {
+                Plugin::log( 'Successfully deleted the older post with id = %s.', $this->id );
+            }
+            else {
+                Plugin::error( 'Failed to delete the older post with id = %s.', $this->id );
+                $ok = false;
+            }
+        }
+
+        // Insert post
+        if ( $ok ) {
+            $post = [
+                'post_type' => 'post',
+                'import_id' => $this->id,
+                'post_name' => $this->slug,
+                'post_title' => $this->title,
+                'post_content' => $this->content,
+                'post_excerpt' => $this->excerpt,
+                'post_author' => $this->author,
+                'post_date' => $this->date,
+                'post_status' => $this->status,
+                'post_category' => Plugin::peel_off( 'category', $this->terms, [] ),
+                'tags_input' => Plugin::peel_off( 'post_tag', $this->terms, [] ),
+                'tax_input' => $this->terms,
+                '_thumbnail_id' => Plugin::peel_off( '_thumbnail_id', $this->metadata, '' ),
+                'meta_input' => $this->metadata,
+            ];
+            $response = wp_insert_post( $post, true );
+            if ( is_wp_error( $response ) ) {
+                Plugin::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
+                $ok = false;
+            }
+            assert( $response == $this->id );
+        }
 
         return $ok;
 
@@ -73,7 +114,7 @@ class Post extends Abstract_Importer {
             }
         }
         else {
-            self::error( 'No author with id = %s.', $this->author );
+            self::error( 'No user with id = %s.', $this->author );
             $ok = false;
         }
         return $ok;
@@ -113,6 +154,11 @@ class Post extends Abstract_Importer {
             }
         }
         return $ok;
+    }
+
+    private function id_exists() {
+        global $wpdb;
+        return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE ID = %d", $this->id ) );
     }
 
 }
