@@ -19,7 +19,7 @@
 namespace Kntnt\Posts_Import;
 
 // Uncomment following line to debug this plugin.
-define( 'KNTNT_POSTS_IMPORT_DEBUG', true );
+// define( 'KNTNT_POSTS_IMPORT_DEBUG', true );
 
 require 'autoload.php';
 

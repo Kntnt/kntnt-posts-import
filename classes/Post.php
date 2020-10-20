@@ -37,6 +37,8 @@ final class Post extends Abstract_Importer {
         }
     }
 
+    protected static $all = [];
+
     protected function __construct( $post ) {
         $this->id = $post->id;
         $this->slug = $post->slug;
@@ -70,7 +72,7 @@ final class Post extends Abstract_Importer {
                 Plugin::log( 'Successfully deleted the older post with id = %s.', $this->id );
             }
             else {
-                Plugin::error( 'Failed to delete the older post with id = %s.', $this->id );
+                self::error( 'Failed to delete the older post with id = %s.', $this->id );
                 $ok = false;
             }
         }
@@ -95,7 +97,7 @@ final class Post extends Abstract_Importer {
             ];
             $response = wp_insert_post( $post, true );
             if ( is_wp_error( $response ) ) {
-                Plugin::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
+                self::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
             }
             assert( $response == $this->id );
@@ -122,17 +124,19 @@ final class Post extends Abstract_Importer {
 
     private function save_terms() {
         $ok = true;
-        foreach ( $this->terms as $term_id ) {
-            $term = Term::get( $term_id );
-            if ( $term ) {
-                if ( ! $term->save() ) {
-                    self::error( 'Error while saving term with id = %s. See above.', $term_id );
+        foreach ( $this->terms as $taxonomy ) {
+            foreach ( $taxonomy as $term_id ) {
+                $term = Term::get( $term_id );
+                if ( $term ) {
+                    if ( ! $term->save() ) {
+                        self::error( 'Error while saving term with id = %s. See above.', $term_id );
+                        $ok = false;
+                    }
+                }
+                else {
+                    self::error( 'No term with id = %s.', $term_id );
                     $ok = false;
                 }
-            }
-            else {
-                self::error( 'No term with id = %s.', $term_id );
-                $ok = false;
             }
         }
         return $ok;

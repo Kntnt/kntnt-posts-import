@@ -6,8 +6,6 @@ namespace Kntnt\Posts_Import;
 
 abstract class Abstract_Importer {
 
-    protected static $all = [];
-
     private static $errors = [];
 
     private $unsaved = true;
@@ -23,22 +21,22 @@ abstract class Abstract_Importer {
                     $message = sprintf( _n( '%s is missing property for the object %s with id = %s.', '%s are missing properties for the object %s with id = %s.', count( $diff ), $domain = 'kntnt-posts-import' ), join( ', ', $diff ), static::class, $object->id );
                 }
                 self::error( $message );
-                Plugin::error( $object );
+                Plugin::log( $object );
                 continue;
             }
-            self::$all[ $object->id ] = new static( $object );
+            static::$all[ $object->id ] = new static( $object );
             Plugin::log( 'Created %s from %s', static::class, $object );
         }
     }
 
     public static function get( $id ) {
-        return isset( self::$all[ $id ] ) ? self::$all[ $id ] : null;
+        return isset( static::$all[ $id ] ) ? static::$all[ $id ] : null;
     }
 
     public static function error( $message, ...$args ) {
         $message = sprintf( $message, ...$args );
-        Plugin::error( $message );
         self::$errors[] = $message;
+        Plugin::error( $message );
     }
 
     public static function errors() {

@@ -90,7 +90,7 @@ final class Import_Tool {
             }
         }
 
-        // Post::save_all();
+        Post::save_all();
 
     }
 

@@ -28,6 +28,8 @@ final class Attachment extends Abstract_Importer {
 
     public $src;
 
+    protected static $all = [];
+
     protected function __construct( $attachment ) {
         $this->id = $attachment->id;
         $this->slug = $attachment->slug;
@@ -38,7 +40,7 @@ final class Attachment extends Abstract_Importer {
         $this->excerpt = $attachment->excerpt;
         $this->author = $attachment->author;
         $this->date = $attachment->date;
-        $this->metadata = $attachment->metadata;
+        $this->metadata = (array) $attachment->metadata; // Associative arrays becomes objets in JSON.
         $this->src = $attachment->src;
     }
 
@@ -58,25 +60,25 @@ final class Attachment extends Abstract_Importer {
                 Plugin::log( 'Successfully deleted the older attachment or post with id = %s.', $this->id );
             }
             else {
-                Plugin::error( 'Failed to delete the older attachment or post with id = %s.', $this->id );
+                self::error( 'Failed to delete the older attachment or post with id = %s.', $this->id );
                 $ok = false;
             }
         }
 
         $file = Plugin::peel_off( '_wp_attached_file', $this->metadata, false );
         if ( $ok && $file ) {
-            $dst = Plugin::upload_dir( $file );
+            $dst = Plugin::upload_dir( $file[0] );
             if ( $src = fopen( $this->src, 'r' ) ) {
                 if ( file_put_contents( $dst, $src ) ) {
                     Plugin::log( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
                 }
                 else {
-                    Plugin::error( 'Failed to save %s to %s.', $this->src, $dst );
+                    self::error( 'Failed to save %s to %s.', $this->src, $dst );
                     $ok = false;
                 }
             }
             else {
-                Plugin::error( 'Failed to download %s to %s.', $this->src, $dst );
+                self::error( 'Failed to download %s to %s.', $this->src, $dst );
                 $ok = false;
             }
         }
@@ -99,7 +101,7 @@ final class Attachment extends Abstract_Importer {
             ];
             $response = wp_insert_post( $attachment, true );
             if ( is_wp_error( $response ) ) {
-                Plugin::error( 'Failed to insert $attachment with id = %s: %s', $this->id, $response->get_error_messages() );
+                self::error( 'Failed to insert $attachment with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
             }
             assert( $response == $this->id );

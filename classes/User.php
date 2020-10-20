@@ -3,8 +3,6 @@
 
 namespace Kntnt\Posts_Import;
 
-// TODO include "wp-admin/includes/user.php";
-
 
 final class User extends Abstract_Importer {
 
@@ -48,6 +46,8 @@ final class User extends Abstract_Importer {
 
     public $metadata;
 
+    protected static $all = [];
+
     protected function __construct( $user ) {
         $this->id = $user->id;
         $this->login = $user->login;
@@ -85,10 +85,13 @@ final class User extends Abstract_Importer {
             $ok &= wp_delete_user( $this->id );
             if ( $ok ) {
                 Plugin::log( 'Successfully deleted the older user with id = %s.', $this->id );
-                $this->create_id();
+                $ok = $this->create_id();
+                if ( ! $ok ) {
+                    self::error( 'Failed to create user with id = %s.', $this->id );
+                }
             }
             else {
-                Plugin::error( 'Failed to delete existing user with id = %s.', $this->id );
+                self::error( 'Failed to delete existing user with id = %s.', $this->id );
             }
         }
 
@@ -119,7 +122,7 @@ final class User extends Abstract_Importer {
             ];
             $response = wp_insert_user( $user );
             if ( is_wp_error( $response ) ) {
-                Plugin::error( 'Failed to insert user with id = %s: %s', $this->id, $response->get_error_messages() );
+                self::error( 'Failed to insert user with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
             }
         }
@@ -129,7 +132,7 @@ final class User extends Abstract_Importer {
             foreach ( $this->metadata as $key => $value ) {
                 $ok &= add_metadata( 'user', $this->id, $key, $value );
                 if ( ! $ok ) {
-                    Plugin::error( 'Failed to save all metadata for user with id = %s.', $this->id );
+                    self::error( 'Failed to save all metadata for user with id = %s.', $this->id );
                     break;
                 }
             }
@@ -139,14 +142,14 @@ final class User extends Abstract_Importer {
 
     }
 
-    private function create_id() {
-        global $wpdb;
-        $wpdb->insert( $wpdb->users, [ 'ID' => $this->id ] );
-    }
-
     private function id_exists() {
         global $wpdb;
         return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT ID FROM $wpdb->users WHERE ID = %d", $this->id ) );
+    }
+
+    private function create_id() {
+        global $wpdb;
+        return (bool) $wpdb->insert( $wpdb->users, [ 'ID' => $this->id ] );
     }
 
 }
