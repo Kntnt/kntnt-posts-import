@@ -40,9 +40,8 @@ final class Attachment extends Abstract_Importer {
         $this->excerpt = $attachment->excerpt;
         $this->author = $attachment->author;
         $this->date = $attachment->date;
-        $this->metadata = Plugin::objects_to_arrays($attachment->metadata);
-        // $this->src = $attachment->src;
-        $this->src = str_replace( '/uploads/', '/src/', $attachment->src ); // TODO: REMOVE THIS AND THE FUNCTION FAKE().
+        $this->metadata = Plugin::objects_to_arrays( $attachment->metadata );
+        $this->src = $attachment->src;
     }
 
     protected function _save() {
