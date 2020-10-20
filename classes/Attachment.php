@@ -42,32 +42,37 @@ final class Attachment extends Abstract_Importer {
         $this->date = $attachment->date;
         $this->metadata = (array) $attachment->metadata; // Associative arrays becomes objets in JSON.
         $this->src = $attachment->src;
+        $this->src = $this->FAKE( $attachment->src ); // FIXME: REMOVE THIS AND FAKE().
     }
 
     protected function _save() {
 
         $ok = true;
 
-        // Save dependencies
         $ok &= $this->save_author();
         $ok = apply_filters( 'kntnt-post-import-save-attachment-dependencies', $ok, $this );
 
-        // Delete pre-existing attachment
         if ( $ok && $this->id_exists() ) {
-            Plugin::log( 'An older attachment or post exists with id = %s.', $this->id );
-            $deleted_post = wp_delete_post( $this->id, true );
-            if ( $deleted_post ) {
-                Plugin::log( 'Successfully deleted the older attachment or post with id = %s.', $this->id );
-            }
-            else {
+            Plugin::log( 'Deleting a pre-existing attachment with id = %s.', $this->id );
+            $ok = (bool) wp_delete_post( $this->id, true );
+            if ( ! $ok ) {
                 self::error( 'Failed to delete the older attachment or post with id = %s.', $this->id );
-                $ok = false;
             }
         }
 
-        $file = Plugin::peel_off( '_wp_attached_file', $this->metadata, false );
-        if ( $ok && $file ) {
-            $dst = Plugin::upload_dir( $file[0] );
+        if ( $ok ) {
+            $file = Plugin::peel_off( '_wp_attached_file', $this->metadata, false );
+            if ( $file && isset( $file[0] ) ) {
+                $file = $file[0];
+            }
+            else {
+                $ok = false;
+                self::error( 'Attachment with id = %s has no file.', $this->id );
+            }
+        }
+
+        if ( $ok ) {
+            $dst = Plugin::upload_dir( $file );
             if ( $src = fopen( $this->src, 'r' ) ) {
                 if ( file_put_contents( $dst, $src ) ) {
                     Plugin::log( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
@@ -85,6 +90,7 @@ final class Attachment extends Abstract_Importer {
 
         // Insert attachment
         if ( $ok ) {
+
             $attachment = [
                 'post_type' => 'attachment',
                 'import_id' => $this->id,
@@ -99,12 +105,15 @@ final class Attachment extends Abstract_Importer {
                 'file' => $file,
                 'meta_input' => $this->metadata,
             ];
+
+            Plugin::log( 'Create attachment with id = %s: %s', $this->id, $attachment );
             $response = wp_insert_post( $attachment, true );
             if ( is_wp_error( $response ) ) {
                 self::error( 'Failed to insert $attachment with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
             }
             assert( $response == $this->id );
+
         }
 
         return $ok;
@@ -129,6 +138,10 @@ final class Attachment extends Abstract_Importer {
     private function id_exists() {
         global $wpdb;
         return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE ID = %d", $this->id ) );
+    }
+
+    private function FAKE( $src ) {
+        return str_replace( '/uploads/', '/src/', $src );
     }
 
 }

@@ -34,6 +34,9 @@ abstract class Abstract_Importer {
     }
 
     public static function error( $message, ...$args ) {
+        foreach ( $args as &$arg ) {
+            $arg = Plugin::stringify( $arg );
+        }
         $message = sprintf( $message, ...$args );
         self::$errors[] = $message;
         Plugin::error( $message );

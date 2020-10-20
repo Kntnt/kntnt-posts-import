@@ -32,7 +32,7 @@ final class Term extends Abstract_Importer {
         $this->parent = $term->parent;
         $this->taxonomy = $term->taxonomy;
         $this->description = $term->description;
-        $this->metadata = $term->metadata;
+        $this->metadata = (array) $term->metadata; // Associative arrays becomes objets in JSON.
         $this->default = $term->default;
 
         // Always save the default term.
@@ -50,7 +50,6 @@ final class Term extends Abstract_Importer {
 
         $ok = true;
 
-        // Save dependencies
         $ok = apply_filters( 'kntnt-post-import-save-term-dependencies', $ok, $this );
 
         if ( ! taxonomy_exists( $this->taxonomy ) ) {
@@ -58,39 +57,48 @@ final class Term extends Abstract_Importer {
             $ok = false;
         }
 
-        if ( $ok && $this->id_exists() ) {
-            Plugin::log( 'An older term with id = %s.', $this->id );
-            $response = wp_delete_term( $this->id, $this->taxonomy );
-            if ( is_wp_error( $response ) ) {
-                self::error( 'Failed to delete existing term with id = %s: %s', $this->id, $response->get_error_messages() );
-                $ok = false;
+        if ( $ok ) {
+
+            if ( $this->id_exists() ) {
+                Plugin::log( 'Deleting a pre-existing term with id = %s.', $this->id );
+                $response = wp_delete_term( $this->id, $this->taxonomy );
+                if ( is_wp_error( $response ) ) {
+                    $ok = false;
+                    self::error( 'Failed to delete existing term with id = %s: %s', $this->id, $response->get_error_message() );
+                }
             }
-            else {
-                Plugin::log( 'Successfully deleted the older term with id = %s.', $this->id );
+
+            if ( $ok ) {
+                Plugin::log( 'Create an empty term with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
                     self::error( 'Failed to create term with id = %s.', $this->id );
                 }
             }
+
         }
 
         if ( $ok ) {
+
             $term = [
                 'slug' => $this->slug,
                 'name' => $this->name,
                 'parent' => $this->parent,
                 'description' => $this->description,
             ];
+
+            Plugin::log( 'Update term with id = %s: %s', $this->id, $term );
             $response = wp_update_term( $this->id, $this->taxonomy, $term );
             if ( is_wp_error( $response ) ) {
-                self::error( 'Failed insert term with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
+                self::error( 'Failed insert term with id = %s: %s', $this->id, $response->get_error_message() );
             }
+
         }
 
         if ( wp_term_is_shared( $this->id ) ) {
-            self::error( 'Failed to save metadata for term with id = %s: Term meta cannot be added to terms that are shared between taxonomies.', $this->id );
             $ok = false;
+            self::error( 'Failed to save metadata for term with id = %s: Term meta cannot be added to terms that are shared between taxonomies.', $this->id );
         }
 
         if ( $ok ) {

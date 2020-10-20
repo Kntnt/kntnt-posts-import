@@ -49,9 +49,9 @@ final class Post extends Abstract_Importer {
         $this->author = $post->author;
         $this->date = $post->date;
         $this->status = $post->status;
-        $this->terms = $post->terms;
+        $this->terms = (array) $post->terms; // Associative arrays becomes objets in JSON.
         $this->attachments = $post->attachments;
-        $this->metadata = $post->metadata;
+        $this->metadata = (array) $post->metadata; // Associative arrays becomes objets in JSON.
     }
 
     protected function _save() {
@@ -79,6 +79,7 @@ final class Post extends Abstract_Importer {
 
         // Insert post
         if ( $ok ) {
+
             $post = [
                 'post_type' => 'post',
                 'import_id' => $this->id,
@@ -95,12 +96,15 @@ final class Post extends Abstract_Importer {
                 '_thumbnail_id' => Plugin::peel_off( '_thumbnail_id', $this->metadata, '' ),
                 'meta_input' => $this->metadata,
             ];
+
+            Plugin::log( 'Create post with id = %s: %s', $this->id, $post );
             $response = wp_insert_post( $post, true );
             if ( is_wp_error( $response ) ) {
                 self::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
             }
             assert( $response == $this->id );
+
         }
 
         return $ok;

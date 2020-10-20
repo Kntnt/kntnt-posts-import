@@ -68,34 +68,35 @@ final class User extends Abstract_Importer {
         $this->admin_color = $user->admin_color;
         $this->show_admin_bar_front = $user->show_admin_bar_front;
         $this->locale = $user->locale;
-        $this->metadata = $user->metadata;
+        $this->metadata = (array) $user->metadata; // Associative arrays becomes objets in JSON.
     }
 
     protected function _save() {
 
         $ok = true;
 
-        // Save dependencies
         $ok = apply_filters( 'kntnt-post-import-save-user-dependencies', $ok, $this );
 
-        // Delete pre-existing user if not current user, and recreate the id
-        // which is necessary for wp_insert_user() to use the id.
-        if ( $ok && $this->id_exists() && get_current_user_id() != $this->id ) {
-            Plugin::log( 'An older attachment or post exists with id = %s.', $this->id );
-            $ok &= wp_delete_user( $this->id );
+        if ( $ok && get_current_user_id() != $this->id ) {
+
+            if ( $this->id_exists() ) {
+                Plugin::log( 'Deleting a pre-existing user with id = %s.', $this->id );
+                $ok = wp_delete_user( $this->id );
+                if ( ! $ok ) {
+                    self::error( 'Failed to delete the pre-existing user with id = %s.', $this->id );
+                }
+            }
+
             if ( $ok ) {
-                Plugin::log( 'Successfully deleted the older user with id = %s.', $this->id );
+                Plugin::log( 'Create an empty user with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
                     self::error( 'Failed to create user with id = %s.', $this->id );
                 }
             }
-            else {
-                self::error( 'Failed to delete existing user with id = %s.', $this->id );
-            }
+
         }
 
-        // Update the user (which is non-existing except for current user).
         if ( $ok ) {
 
             $user = [
@@ -120,15 +121,18 @@ final class User extends Abstract_Importer {
                 'locale' => $this->locale,
                 'metadata' => $this->metadata,
             ];
+
+            Plugin::log( 'Update user with id = %s: %s', $this->id, $user );
             $response = wp_insert_user( $user );
             if ( is_wp_error( $response ) ) {
-                self::error( 'Failed to insert user with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
+                self::error( 'Failed to insert user with id = %s: %s', $this->id, $response->get_error_message() );
             }
+
         }
 
-        // Save metadata.
         if ( $ok ) {
+            Plugin::log( "Saving metadata for user with id = %s", $this->id );
             foreach ( $this->metadata as $key => $value ) {
                 $ok &= add_metadata( 'user', $this->id, $key, $value );
                 if ( ! $ok ) {
