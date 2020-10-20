@@ -93,7 +93,7 @@ final class Post extends Abstract_Importer {
                 'post_category' => Plugin::peel_off( 'category', $this->terms, [] ),
                 'tags_input' => Plugin::peel_off( 'post_tag', $this->terms, [] ),
                 'tax_input' => $this->terms,
-                '_thumbnail_id' => Plugin::peel_off( '_thumbnail_id', $this->metadata, '' ),
+                '_thumbnail_id' => Plugin::peel_off( '_thumbnail_id', $this->metadata, [ 0 => '' ] )[0],
                 'meta_input' => $this->metadata,
             ];
 
