@@ -32,7 +32,7 @@ final class Term extends Abstract_Importer {
         $this->parent = $term->parent;
         $this->taxonomy = $term->taxonomy;
         $this->description = $term->description;
-        $this->metadata = (array) $term->metadata; // Associative arrays becomes objets in JSON.
+        $this->metadata = Plugin::objects_to_arrays( $term->metadata );
         $this->default = $term->default;
 
         // Always save the default term.

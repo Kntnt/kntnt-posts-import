@@ -49,9 +49,9 @@ final class Post extends Abstract_Importer {
         $this->author = $post->author;
         $this->date = $post->date;
         $this->status = $post->status;
-        $this->terms = (array) $post->terms; // Associative arrays becomes objets in JSON.
+        $this->terms = Plugin::objects_to_arrays( $post->terms );
         $this->attachments = $post->attachments;
-        $this->metadata = (array) $post->metadata; // Associative arrays becomes objets in JSON.
+        $this->metadata = Plugin::objects_to_arrays( $post->metadata );
     }
 
     protected function _save() {

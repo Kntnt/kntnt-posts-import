@@ -9,7 +9,7 @@ final class Import_Tool {
     private $errors = [];
 
     public function run() {
-        add_management_page( 'Kntnt Posts import', 'Posts import', 'manage_options', 'kntnt-posts-import', [ $this, 'tool' ] );
+        add_management_page( 'Kntnt Posts Import', 'Posts import', 'manage_options', 'kntnt-posts-import', [ $this, 'tool' ] );
     }
 
     public function tool() {

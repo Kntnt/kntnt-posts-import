@@ -68,7 +68,7 @@ final class User extends Abstract_Importer {
         $this->admin_color = $user->admin_color;
         $this->show_admin_bar_front = $user->show_admin_bar_front;
         $this->locale = $user->locale;
-        $this->metadata = (array) $user->metadata; // Associative arrays becomes objets in JSON.
+        $this->metadata = Plugin::objects_to_arrays( $user->metadata );
     }
 
     protected function _save() {

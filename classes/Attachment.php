@@ -40,9 +40,9 @@ final class Attachment extends Abstract_Importer {
         $this->excerpt = $attachment->excerpt;
         $this->author = $attachment->author;
         $this->date = $attachment->date;
-        $this->metadata = (array) $attachment->metadata; // Associative arrays becomes objets in JSON.
-        $this->src = $attachment->src;
-        $this->src = $this->FAKE( $attachment->src ); // FIXME: REMOVE THIS AND FAKE().
+        $this->metadata = Plugin::objects_to_arrays($attachment->metadata);
+        // $this->src = $attachment->src;
+        $this->src = str_replace( '/uploads/', '/src/', $attachment->src ); // TODO: REMOVE THIS AND THE FUNCTION FAKE().
     }
 
     protected function _save() {
@@ -88,7 +88,12 @@ final class Attachment extends Abstract_Importer {
             }
         }
 
-        // Insert attachment
+        $is_image = preg_match( '@^image/@', $this->mime_type ) && file_is_displayable_image( $dst );
+
+        if ( $ok && $is_image ) {
+            $image_metadata = Plugin::peel_off( '_wp_attachment_metadata', $this->metadata, [] );
+        }
+
         if ( $ok ) {
 
             $attachment = [
@@ -116,6 +121,13 @@ final class Attachment extends Abstract_Importer {
 
         }
 
+        if ( $ok && $is_image ) {
+            Plugin::log( 'Generates images for various sizes from "%s".' );
+            $subsizes = wp_get_registered_image_subsizes();
+            $subsizes = apply_filters( 'intermediate_image_sizes_advanced', $subsizes, $image_metadata, $this->id );
+            _wp_make_subsizes( $subsizes, $dst, $image_metadata, $this->id );
+        }
+
         return $ok;
 
     }
@@ -138,10 +150,6 @@ final class Attachment extends Abstract_Importer {
     private function id_exists() {
         global $wpdb;
         return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE ID = %d", $this->id ) );
-    }
-
-    private function FAKE( $src ) {
-        return str_replace( '/uploads/', '/src/', $src );
     }
 
 }

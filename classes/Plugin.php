@@ -60,6 +60,15 @@ final class Plugin extends Abstract_Plugin {
         return $val;
     }
 
+    // Associative arrays becomes objects when exported as JSON.
+    // This method recursively cast objects to arrays.
+    public static function objects_to_arrays( $object ) {
+        if ( ! is_object( $object ) && ! is_array( $object ) ) {
+            return $object;
+        }
+        return array_map( [ self::class, 'objects_to_arrays' ], (array) $object );
+    }
+
     public function classes_to_load() {
         return [
             'admin' => [
