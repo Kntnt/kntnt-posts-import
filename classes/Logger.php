@@ -12,9 +12,9 @@ trait Logger {
     // Any percent sign that should be written must be escaped with another
     // percent sign, that is `%%`. This method do nothing if debug flag isn't
     // set.
-    public static final function log( $message = '', ...$args ) {
+    public static function log( $message = '', ...$args ) {
         if ( self::is_debugging() ) {
-            static::_log( $message, ...$args );
+            self::_log( $message, ...$args );
         }
     }
 
@@ -24,8 +24,8 @@ trait Logger {
     // Any percent sign that should be written must be escaped with another
     // percent sign, that is `%%`. This method works independent of
     // the debug flag.
-    public static final function error( $message = '', ...$args ) {
-        static::_log( $message, ...$args );
+    public static function error( $message = '', ...$args ) {
+        self::_log( $message, ...$args );
     }
 
     public static final function stringify( $val ) {
@@ -44,7 +44,7 @@ trait Logger {
         return $out;
     }
 
-    private static function _log( $message = '', ...$args ) {
+    protected static function _log( $message = '', ...$args ) {
         if ( ! is_string( $message ) ) {
             $args = [ $message ];
             $message = '%s';

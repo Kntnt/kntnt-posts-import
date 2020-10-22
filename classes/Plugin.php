@@ -11,6 +11,8 @@ final class Plugin extends Abstract_Plugin {
 
     private static $public_properties = [];
 
+    private static $errors = [];
+
     public static function public_properties_of( $object_or_class_name ) {
 
         if ( ! is_object( $object_or_class_name ) && isset( self::$public_properties[ $object_or_class_name ] ) ) {
@@ -67,6 +69,21 @@ final class Plugin extends Abstract_Plugin {
             return $object;
         }
         return array_map( [ self::class, 'objects_to_arrays' ], (array) $object );
+    }
+
+    public static function error( $message, ...$args ) {
+        foreach ( $args as &$arg ) {
+            $arg = Plugin::stringify( $arg );
+        }
+        $message = sprintf( $message, ...$args );
+        self::$errors[] = $message;
+        self::_log( $message );
+    }
+
+    public static function errors() {
+        $errors = self::$errors;
+        self::$errors = [];
+        return $errors;
     }
 
     public function classes_to_load() {

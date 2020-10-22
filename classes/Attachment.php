@@ -55,7 +55,7 @@ final class Attachment extends Abstract_Importer {
             Plugin::log( 'Deleting a pre-existing attachment with id = %s.', $this->id );
             $ok = (bool) wp_delete_post( $this->id, true );
             if ( ! $ok ) {
-                self::error( 'Failed to delete the older attachment or post with id = %s.', $this->id );
+                Plugin::error( 'Failed to delete the older attachment or post with id = %s.', $this->id );
             }
         }
 
@@ -66,7 +66,7 @@ final class Attachment extends Abstract_Importer {
             }
             else {
                 $ok = false;
-                self::error( 'Attachment with id = %s has no file.', $this->id );
+                Plugin::error( 'Attachment with id = %s has no file.', $this->id );
             }
         }
 
@@ -77,12 +77,12 @@ final class Attachment extends Abstract_Importer {
                     Plugin::log( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
                 }
                 else {
-                    self::error( 'Failed to save %s to %s.', $this->src, $dst );
+                    Plugin::error( 'Failed to save %s to %s.', $this->src, $dst );
                     $ok = false;
                 }
             }
             else {
-                self::error( 'Failed to download %s to %s.', $this->src, $dst );
+                Plugin::error( 'Failed to download %s to %s.', $this->src, $dst );
                 $ok = false;
             }
         }
@@ -113,7 +113,7 @@ final class Attachment extends Abstract_Importer {
             Plugin::log( 'Create attachment with id = %s: %s', $this->id, $attachment );
             $response = wp_insert_post( $attachment, true );
             if ( is_wp_error( $response ) ) {
-                self::error( 'Failed to insert $attachment with id = %s: %s', $this->id, $response->get_error_messages() );
+                Plugin::error( 'Failed to insert $attachment with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
             }
             assert( $response == $this->id );
@@ -136,11 +136,11 @@ final class Attachment extends Abstract_Importer {
         if ( $user ) {
             $ok = $user->save();
             if ( ! $ok ) {
-                self::error( 'Error while saving author with id = %s. See above.', $user->id );
+                Plugin::error( 'Error while saving author with id = %s. See above.', $user->id );
             }
         }
         else {
-            self::error( 'No user with id = %s.', $this->author );
+            Plugin::error( 'No user with id = %s.', $this->author );
             $ok = false;
         }
         return $ok;

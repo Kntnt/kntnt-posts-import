@@ -72,7 +72,7 @@ final class Post extends Abstract_Importer {
                 Plugin::log( 'Successfully deleted the older post with id = %s.', $this->id );
             }
             else {
-                self::error( 'Failed to delete the older post with id = %s.', $this->id );
+                Plugin::error( 'Failed to delete the older post with id = %s.', $this->id );
                 $ok = false;
             }
         }
@@ -100,7 +100,7 @@ final class Post extends Abstract_Importer {
             Plugin::log( 'Create post with id = %s: %s', $this->id, $post );
             $response = wp_insert_post( $post, true );
             if ( is_wp_error( $response ) ) {
-                self::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
+                Plugin::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
                 $ok = false;
             }
             assert( $response == $this->id );
@@ -116,11 +116,11 @@ final class Post extends Abstract_Importer {
         if ( $user ) {
             $ok = $user->save();
             if ( ! $ok ) {
-                self::error( 'Error while saving author with id = %s. See above.', $user->id );
+                Plugin::error( 'Error while saving author with id = %s. See above.', $user->id );
             }
         }
         else {
-            self::error( 'No user with id = %s.', $this->author );
+            Plugin::error( 'No user with id = %s.', $this->author );
             $ok = false;
         }
         return $ok;
@@ -133,12 +133,12 @@ final class Post extends Abstract_Importer {
                 $term = Term::get( $term_id );
                 if ( $term ) {
                     if ( ! $term->save() ) {
-                        self::error( 'Error while saving term with id = %s. See above.', $term_id );
+                        Plugin::error( 'Error while saving term with id = %s. See above.', $term_id );
                         $ok = false;
                     }
                 }
                 else {
-                    self::error( 'No term with id = %s.', $term_id );
+                    Plugin::error( 'No term with id = %s.', $term_id );
                     $ok = false;
                 }
             }
@@ -152,12 +152,12 @@ final class Post extends Abstract_Importer {
             $attachment = Attachment::get( $attachment_id );
             if ( $attachment ) {
                 if ( ! $attachment->save() ) {
-                    self::error( 'Error while saving attachment with id = %s. See above.', $attachment_id );
+                    Plugin::error( 'Error while saving attachment with id = %s. See above.', $attachment_id );
                     $ok = false;
                 }
             }
             else {
-                self::error( 'No attachment with id = %s.', $attachment_id );
+                Plugin::error( 'No attachment with id = %s.', $attachment_id );
                 $ok = false;
             }
         }

@@ -6,8 +6,6 @@ namespace Kntnt\Posts_Import;
 
 final class Import_Tool {
 
-    private $errors = [];
-
     public function run() {
         add_management_page( 'Kntnt Posts Import', 'Posts import', 'manage_options', 'kntnt-posts-import', [ $this, 'tool' ] );
     }
@@ -27,8 +25,7 @@ final class Import_Tool {
                 $this->import( trim( stripslashes_deep( $_POST['import'] ) ) );
             }
             else {
-                $this->errors[] = __( "Couldn't import; the form has expired. Please, try again.", 'kntnt-posts-import' );
-                Plugin::error( "Couldn't verify nonce." );
+                Plugin::error( __( "Couldn't import; the form has expired. Please, try again.", 'kntnt-posts-import' ) );
             }
         }
         $this->render_page();
@@ -42,7 +39,7 @@ final class Import_Tool {
             'ns' => Plugin::ns(),
             'title' => __( 'Kntnt Posts import', 'kntnt-posts-import' ),
             'submit_button_text' => __( 'Import', 'kntnt-posts-import' ),
-            'errors' => $this->errors,
+            'errors' => Plugin::errors(),
         ] );
 
     }
@@ -54,38 +51,27 @@ final class Import_Tool {
              ! ( $property_diff = Plugin::property_diff( [ 'attachments', 'users', 'post_terms', 'posts' ], $import ) ) ) {
 
             Attachment::import( $import->attachments );
-            $this->errors = array_merge( $this->errors, Attachment::errors() );
-
             User::import( $import->users );
-            $this->errors = array_merge( $this->errors, User::errors() );
-
             Term::import( $import->post_terms );
-            $this->errors = array_merge( $this->errors, Term::errors() );
-
             Post::import( $import->posts );
-            $this->errors = array_merge( $this->errors, Post::errors() );
 
         }
         else {
             if ( $import === '' ) {
                 $message = __( 'No data to import.', 'kntnt-posts-import' );
-                $this->errors[] = $message;
                 Plugin::error( $message );
             }
             else if ( $import === null ) {
                 $message = sprintf( __( 'JSON error message: %s', 'kntnt-posts-import' ), json_last_error_msg() );
-                $this->errors[] = $message;
                 Plugin::error( $message );
             }
             else if ( $property_diff ) {
                 $message = sprintf( _n( 'Missing property %s.', '%s are missing properties.', count( $property_diff ), $domain = 'kntnt-posts-import' ), join( ', ', $property_diff ) );
-                $this->errors[] = $message;
                 Plugin::error( $message );
                 Plugin::log( array_keys( (array) $import ) );
             }
             else {
                 $message = 'Bad programmer!'; // Will never happen ;-)
-                $this->errors[] = $message;
                 Plugin::error( $message );
             }
         }

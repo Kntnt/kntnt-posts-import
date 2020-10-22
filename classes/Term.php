@@ -53,7 +53,7 @@ final class Term extends Abstract_Importer {
         $ok = apply_filters( 'kntnt-post-import-save-term-dependencies', $ok, $this );
 
         if ( ! taxonomy_exists( $this->taxonomy ) ) {
-            self::error( 'Failed to insert term with id = %s since its taxonomy %s doesn\'t exists', $this->id, $this->taxonomy );
+            Plugin::error( 'Failed to insert term with id = %s since its taxonomy %s doesn\'t exists', $this->id, $this->taxonomy );
             $ok = false;
         }
 
@@ -64,7 +64,7 @@ final class Term extends Abstract_Importer {
                 $response = wp_delete_term( $this->id, $this->taxonomy );
                 if ( is_wp_error( $response ) ) {
                     $ok = false;
-                    self::error( 'Failed to delete existing term with id = %s: %s', $this->id, $response->get_error_message() );
+                    Plugin::error( 'Failed to delete existing term with id = %s: %s', $this->id, $response->get_error_message() );
                 }
             }
 
@@ -72,7 +72,7 @@ final class Term extends Abstract_Importer {
                 Plugin::log( 'Create an empty term with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
-                    self::error( 'Failed to create term with id = %s.', $this->id );
+                    Plugin::error( 'Failed to create term with id = %s.', $this->id );
                 }
             }
 
@@ -91,21 +91,21 @@ final class Term extends Abstract_Importer {
             $response = wp_update_term( $this->id, $this->taxonomy, $term );
             if ( is_wp_error( $response ) ) {
                 $ok = false;
-                self::error( 'Failed insert term with id = %s: %s', $this->id, $response->get_error_message() );
+                Plugin::error( 'Failed insert term with id = %s: %s', $this->id, $response->get_error_message() );
             }
 
         }
 
         if ( wp_term_is_shared( $this->id ) ) {
             $ok = false;
-            self::error( 'Failed to save metadata for term with id = %s: Term meta cannot be added to terms that are shared between taxonomies.', $this->id );
+            Plugin::error( 'Failed to save metadata for term with id = %s: Term meta cannot be added to terms that are shared between taxonomies.', $this->id );
         }
 
         if ( $ok ) {
             foreach ( $this->metadata as $key => $value ) {
                 $ok &= add_metadata( 'term', $this->id, $key, $value );
                 if ( ! $ok ) {
-                    self::error( 'Failed to save all metadata for term with id = %s.', $this->id );
+                    Plugin::error( 'Failed to save all metadata for term with id = %s.', $this->id );
                     break;
                 }
             }

@@ -83,7 +83,7 @@ final class User extends Abstract_Importer {
                 Plugin::log( 'Deleting a pre-existing user with id = %s.', $this->id );
                 $ok = wp_delete_user( $this->id );
                 if ( ! $ok ) {
-                    self::error( 'Failed to delete the pre-existing user with id = %s.', $this->id );
+                    Plugin::error( 'Failed to delete the pre-existing user with id = %s.', $this->id );
                 }
             }
 
@@ -91,7 +91,7 @@ final class User extends Abstract_Importer {
                 Plugin::log( 'Create an empty user with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
-                    self::error( 'Failed to create user with id = %s.', $this->id );
+                    Plugin::error( 'Failed to create user with id = %s.', $this->id );
                 }
             }
 
@@ -126,7 +126,7 @@ final class User extends Abstract_Importer {
             $response = wp_insert_user( $user );
             if ( is_wp_error( $response ) ) {
                 $ok = false;
-                self::error( 'Failed to insert user with id = %s: %s', $this->id, $response->get_error_message() );
+                Plugin::error( 'Failed to insert user with id = %s: %s', $this->id, $response->get_error_message() );
             }
 
         }
@@ -136,7 +136,7 @@ final class User extends Abstract_Importer {
             foreach ( $this->metadata as $key => $value ) {
                 $ok &= add_metadata( 'user', $this->id, $key, $value );
                 if ( ! $ok ) {
-                    self::error( 'Failed to save all metadata for user with id = %s.', $this->id );
+                    Plugin::error( 'Failed to save all metadata for user with id = %s.', $this->id );
                     break;
                 }
             }
