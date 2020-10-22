@@ -72,17 +72,23 @@ final class Attachment extends Abstract_Importer {
 
         if ( $ok ) {
             $dst = Plugin::upload_dir( $file );
-            if ( $src = fopen( $this->src, 'r' ) ) {
-                if ( file_put_contents( $dst, $src ) ) {
-                    Plugin::log( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
+            if ( wp_mkdir_p( $dir = dirname( $dst ) ) ) {
+                if ( $src = @fopen( $this->src, 'r' ) ) {
+                    if ( file_put_contents( $dst, $src ) ) {
+                        Plugin::log( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
+                    }
+                    else {
+                        Plugin::error( 'Failed to save %s to %s.', $this->src, $dst );
+                        $ok = false;
+                    }
                 }
                 else {
-                    Plugin::error( 'Failed to save %s to %s.', $this->src, $dst );
+                    Plugin::error( 'Failed to download %s to %s.', $this->src, $dst );
                     $ok = false;
                 }
             }
             else {
-                Plugin::error( 'Failed to download %s to %s.', $this->src, $dst );
+                Plugin::error( 'Failed to create directory %s.', $dir );
                 $ok = false;
             }
         }
