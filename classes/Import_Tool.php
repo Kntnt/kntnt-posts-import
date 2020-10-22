@@ -37,7 +37,7 @@ final class Import_Tool {
 
         Plugin::load_from_includes( 'tool.php', [
             'ns' => Plugin::ns(),
-            'title' => __( 'Kntnt Posts import', 'kntnt-posts-import' ),
+            'title' => get_admin_page_title(),
             'submit_button_text' => __( 'Import', 'kntnt-posts-import' ),
             'errors' => Plugin::errors(),
         ] );
