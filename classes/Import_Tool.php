@@ -46,8 +46,13 @@ final class Import_Tool {
                     Plugin::error( __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
                 }
                 else {
-                    Plugin::log( 'Uploaded "%s" to "%s".', $_FILES['import_file']['name'], $_FILES['import_file']['tmp_name'] );
-                    $this->import( file_get_contents( $_FILES['import_file']['tmp_name'] ) );
+                    Plugin::log( 'Uploaded "%s".', $_FILES['import_file']['name'] );
+                    if ( $import = file_get_contents( $_FILES['import_file']['tmp_name'] ) ) {
+                        $this->import( file_get_contents( $_FILES['import_file']['tmp_name'] ) );
+                    }
+                    else {
+                        Plugin::error( __( 'Failed to read the uploaded file.', 'kntnt-posts-import' ) );
+                    }
                 }
             }
             else {
