@@ -43,7 +43,7 @@ final class Import_Tool {
                     Plugin::error( self::$file_upload_errors[ $_FILES['import_file']['error'] ] );
                 }
                 else if ( 'application/json' != $_FILES['import_file']['type'] ) {
-                    Plugin::error( __( 'You must uplad a JSON-file.', 'kntnt-posts-import' ) );
+                    Plugin::error( __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
                 }
                 else {
                     Plugin::log( 'Uploaded "%s" to "%s".', $_FILES['import_file']['name'], $_FILES['import_file']['tmp_name'] );
