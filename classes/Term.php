@@ -96,23 +96,28 @@ final class Term extends Abstract_Importer {
 
         }
 
+        if ( $ok ) {
+            do_action( 'kntnt-posts-import-term-saved', $this->id, $term );
+        }
+
         if ( wp_term_is_shared( $this->id ) ) {
             $ok = false;
             Plugin::error( 'Failed to save metadata for term with id = %s: Term meta cannot be added to terms that are shared between taxonomies.', $this->id );
         }
 
         if ( $ok ) {
-            foreach ( $this->metadata as $key => $value ) {
-                $ok &= add_metadata( 'term', $this->id, $key, $value );
-                if ( ! $ok ) {
-                    Plugin::error( 'Failed to save all metadata for term with id = %s.', $this->id );
-                    break;
+            Plugin::log( "Saving metadata for term with id = %s", $this->id );
+            foreach ( $this->metadata as $field => $values ) {
+                foreach ( $values as $value ) {
+                    if ( add_metadata( 'term', $this->id, $field, $value ) ) {
+                        do_action( 'kntnt-posts-import-term-metadata', $field, $value, $this->id );
+                    }
+                    else {
+                        Plugin::error( 'Failed to update term with id = %s with metadata: %s => %s', $this->id, $field, $value );
+                        $ok = false;
+                    }
                 }
             }
-        }
-
-        if ( $ok ) {
-            do_action( 'kntnt-posts-import-term-saved', $this->id, $term );
         }
 
         return $ok;

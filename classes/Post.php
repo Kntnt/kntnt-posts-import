@@ -94,7 +94,6 @@ final class Post extends Abstract_Importer {
                 'tags_input' => Plugin::peel_off( 'post_tag', $this->terms, [] ),
                 'tax_input' => $this->terms,
                 '_thumbnail_id' => Plugin::peel_off( '_thumbnail_id', $this->metadata, [ 0 => '' ] )[0],
-                'meta_input' => $this->metadata,
             ];
 
             Plugin::log( 'Create post with id = %s: %s', $this->id, $post );
@@ -105,10 +104,25 @@ final class Post extends Abstract_Importer {
             }
             assert( $response == $this->id );
 
-            if ( $ok ) {
-                do_action( 'kntnt-posts-import-post-saved', $this->id, $post );
-            }
+        }
 
+        if ( $ok ) {
+            do_action( 'kntnt-posts-import-post-saved', $this->id, $post );
+        }
+
+        if ( $ok ) {
+            Plugin::log( "Saving metadata for post with id = %s", $this->id );
+            foreach ( $this->metadata as $field => $values ) {
+                foreach ( $values as $value ) {
+                    if ( update_post_meta( $this->id, $field, $value ) ) {
+                        do_action( 'kntnt-posts-import-post-metadata', $field, $value, $this->id );
+                    }
+                    else {
+                        Plugin::error( 'Failed to update post with id = %s with metadata: %s => %s', $this->id, $field, $value );
+                        $ok = false;
+                    }
+                }
+            }
         }
 
         return $ok;

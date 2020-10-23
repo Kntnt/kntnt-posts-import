@@ -113,7 +113,6 @@ final class Attachment extends Abstract_Importer {
                 'post_status' => 'inherit',
                 'post_mime_type' => $this->mime_type,
                 'file' => $file,
-                'meta_input' => $this->metadata,
             ];
 
             Plugin::log( 'Create attachment with id = %s: %s', $this->id, $attachment );
@@ -126,6 +125,25 @@ final class Attachment extends Abstract_Importer {
 
         }
 
+        if ( $ok ) {
+            do_action( 'kntnt-posts-import-user-saved', $this->id, $attachment );
+        }
+
+        if ( $ok ) {
+            Plugin::log( "Saving metadata for attachment with id = %s", $this->id );
+            foreach ( $this->metadata as $field => $values ) {
+                foreach ( $values as $value ) {
+                    if ( add_metadata( 'post', $this->id, $field, $value ) ) {
+                        do_action( 'kntnt-posts-import-attachment-metadata', $field, $value, $this->id );
+                    }
+                    else {
+                        Plugin::error( 'Failed to update attachment with id = %s with metadata: %s => %s', $this->id, $field, $value );
+                        $ok = false;
+                    }
+                }
+            }
+        }
+
         if ( $ok && $is_image ) {
             Plugin::log( 'Generates images for various sizes from "%s".' );
             $subsizes = wp_get_registered_image_subsizes();
@@ -133,9 +151,6 @@ final class Attachment extends Abstract_Importer {
             _wp_make_subsizes( $subsizes, $dst, $image_metadata, $this->id );
         }
 
-        if ( $ok ) {
-            do_action( 'kntnt-posts-import-user-saved', $this->id, $attachment );
-        }
         return $ok;
 
     }

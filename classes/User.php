@@ -119,7 +119,6 @@ final class User extends Abstract_Importer {
                 'admin_color' => $this->admin_color,
                 'show_admin_bar_front' => $this->show_admin_bar_front,
                 'locale' => $this->locale,
-                'metadata' => $this->metadata,
             ];
 
             Plugin::log( 'Update user with id = %s: %s', $this->id, $user );
@@ -132,18 +131,22 @@ final class User extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::log( "Saving metadata for user with id = %s", $this->id );
-            foreach ( $this->metadata as $key => $value ) {
-                $ok &= add_metadata( 'user', $this->id, $key, $value );
-                if ( ! $ok ) {
-                    Plugin::error( 'Failed to save all metadata for user with id = %s.', $this->id );
-                    break;
-                }
-            }
+            do_action( 'kntnt-posts-import-user-saved', $this->id, $user );
         }
 
         if ( $ok ) {
-            do_action( 'kntnt-posts-import-user-saved', $this->id, $user );
+            Plugin::log( "Saving metadata for user with id = %s", $this->id );
+            foreach ( $this->metadata as $field => $values ) {
+                foreach ( $values as $value ) {
+                    if ( add_metadata( 'user', $this->id, $field, $value ) ) {
+                        do_action( 'kntnt-posts-import-user-metadata', $field, $value, $this->id );
+                    }
+                    else {
+                        Plugin::error( 'Failed to update user with id = %s with metadata: %s => %s', $this->id, $field, $value );
+                        $ok = false;
+                    }
+                }
+            }
         }
 
         return $ok;
