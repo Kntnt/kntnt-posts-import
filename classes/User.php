@@ -142,6 +142,10 @@ final class User extends Abstract_Importer {
             }
         }
 
+        if ( $ok ) {
+            do_action( 'kntnt-posts-import-user-saved', $this->id, $user );
+        }
+
         return $ok;
 
     }

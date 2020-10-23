@@ -105,6 +105,10 @@ final class Post extends Abstract_Importer {
             }
             assert( $response == $this->id );
 
+            if ( $ok ) {
+                do_action( 'kntnt-posts-import-post-saved', $this->id, $post );
+            }
+
         }
 
         return $ok;

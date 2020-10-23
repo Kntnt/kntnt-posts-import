@@ -133,6 +133,9 @@ final class Attachment extends Abstract_Importer {
             _wp_make_subsizes( $subsizes, $dst, $image_metadata, $this->id );
         }
 
+        if ( $ok ) {
+            do_action( 'kntnt-posts-import-user-saved', $this->id, $attachment );
+        }
         return $ok;
 
     }

@@ -111,6 +111,10 @@ final class Term extends Abstract_Importer {
             }
         }
 
+        if ( $ok ) {
+            do_action( 'kntnt-posts-import-term-saved', $this->id, $term );
+        }
+
         return $ok;
 
     }
