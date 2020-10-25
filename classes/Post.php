@@ -56,20 +56,25 @@ final class Post extends Abstract_Importer {
 
     protected function _save() {
 
-        $ok = true;
+        // Save dependencies.
+        $ok = $this->save_author() &&
+              $this->save_terms() &&
+              $this->save_attachments();
 
-        // Save dependencies
-        $ok &= $this->save_author();
-        $ok &= $this->save_terms();
-        $ok &= $this->save_attachments();
-        $ok = apply_filters( 'kntnt-post-import-save-post-dependencies', $ok, $this );
+        // Allow developers save additional dependencies.
+        if ( $ok ) {
+            $ok = apply_filters( 'kntnt-post-import-save-post-dependencies', $ok, $this );
+            if ( ! $ok ) {
+                Plugin::error( 'A `kntnt-post-import-save-post-dependencies` filter has failed.' );
+            }
+        }
 
         // Delete pre-existing post
         if ( $ok && $this->id_exists() ) {
-            Plugin::log( 'An older post exists with id = %s.', $this->id );
+            Plugin::info( 'An older post exists with id = %s.', $this->id );
             $deleted_post = wp_delete_post( $this->id, true );
             if ( $deleted_post ) {
-                Plugin::log( 'Successfully deleted the older post with id = %s.', $this->id );
+                Plugin::info( 'Successfully deleted the older post with id = %s.', $this->id );
             }
             else {
                 Plugin::error( 'Failed to delete the older post with id = %s.', $this->id );
@@ -96,7 +101,7 @@ final class Post extends Abstract_Importer {
                 '_thumbnail_id' => Plugin::peel_off( '_thumbnail_id', $this->metadata, [ 0 => '' ] )[0],
             ];
 
-            Plugin::log( 'Create post with id = %s: %s', $this->id, $post );
+            Plugin::info( 'Create post with id = %s', $this->id );
             $response = wp_insert_post( $post, true );
             if ( is_wp_error( $response ) ) {
                 Plugin::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
@@ -111,7 +116,7 @@ final class Post extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::log( "Saving metadata for post with id = %s", $this->id );
+            Plugin::info( "Saving metadata for post with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( update_post_meta( $this->id, $field, $value ) ) {

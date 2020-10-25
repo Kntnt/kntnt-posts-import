@@ -4,7 +4,9 @@
 namespace Kntnt\Posts_Import;
 
 
-final class Import_Tool {
+final class Tool_Page {
+
+    static $messages = [];
 
     static $file_upload_errors;
 
@@ -27,7 +29,7 @@ final class Import_Tool {
 
     public function tool() {
 
-        Plugin::log();
+        Plugin::debug();
 
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( __( 'Unauthorized use.', 'kntnt-posts-import' ) );
@@ -40,23 +42,29 @@ final class Import_Tool {
         if ( $_POST ) {
             if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'], Plugin::ns() ) ) {
                 if ( $_FILES['import_file']['error'] ) {
-                    Plugin::error( self::$file_upload_errors[ $_FILES['import_file']['error'] ] );
+                    $this->message( 'red', self::$file_upload_errors[ $_FILES['import_file']['error'] ] );
                 }
                 else if ( 'application/json' != $_FILES['import_file']['type'] ) {
-                    Plugin::error( __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
+                    $this->message( 'red', __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
                 }
                 else {
-                    Plugin::log( 'Uploaded "%s".', $_FILES['import_file']['name'] );
+                    Plugin::debug( 'Uploaded "%s".', $_FILES['import_file']['name'] );
                     if ( $import = file_get_contents( $_FILES['import_file']['tmp_name'] ) ) {
-                        $this->import( file_get_contents( $_FILES['import_file']['tmp_name'] ) );
+                        $response = Importer::start( $import );
+                        if ( is_wp_error( $response ) ) {
+                            $this->message( 'red', __( 'Failed to start background import: %s', 'kntnt-posts-import' ), $response->get_error_messages() );
+                        }
+                        else {
+                            $this->message( 'green', __( 'Successfully started background import. Check log file.', 'kntnt-posts-import' ) );
+                        }
                     }
                     else {
-                        Plugin::error( __( 'Failed to read the uploaded file.', 'kntnt-posts-import' ) );
+                        $this->message( 'red', __( 'Failed to read the uploaded file.', 'kntnt-posts-import' ) );
                     }
                 }
             }
             else {
-                Plugin::error( __( "Couldn't import; the form has expired. Please, try again.", 'kntnt-posts-import' ) );
+                $this->message( 'red', __( "The form has expired. Please, try again.", 'kntnt-posts-import' ) );
             }
         }
 
@@ -66,51 +74,24 @@ final class Import_Tool {
 
     public function render_page() {
 
-        Plugin::log();
+        Plugin::debug();
 
         Plugin::load_from_includes( 'tool.php', [
             'ns' => Plugin::ns(),
             'title' => get_admin_page_title(),
             'submit_button_text' => __( 'Import', 'kntnt-posts-import' ),
-            'errors' => Plugin::errors(),
+            'messages' => self::$messages,
         ] );
 
     }
 
-    private function import( $import ) {
-
-        if ( $import &&
-             ( $import = json_decode( $import ) ) !== null &&
-             ! ( $property_diff = Plugin::property_diff( [ 'attachments', 'users', 'post_terms', 'posts' ], $import ) ) ) {
-
-            Attachment::import( $import->attachments );
-            User::import( $import->users );
-            Term::import( $import->post_terms );
-            Post::import( $import->posts );
-
+    private function message( $color, $message, ...$args ) {
+        foreach ( $args as &$arg ) {
+            $arg = Plugin::stringify( $arg );
         }
-        else {
-            if ( $import === '' ) {
-                $message = __( 'No data to import.', 'kntnt-posts-import' );
-                Plugin::error( $message );
-            }
-            else if ( $import === null ) {
-                $message = sprintf( __( 'JSON error message: %s', 'kntnt-posts-import' ), json_last_error_msg() );
-                Plugin::error( $message );
-            }
-            else if ( $property_diff ) {
-                $message = sprintf( _n( 'Missing property %s.', '%s are missing properties.', count( $property_diff ), $domain = 'kntnt-posts-import' ), join( ', ', $property_diff ) );
-                Plugin::error( $message );
-                Plugin::log( array_keys( (array) $import ) );
-            }
-            else {
-                $message = 'Bad programmer!'; // Will never happen ;-)
-                Plugin::error( $message );
-            }
-        }
-
-        Post::save_all();
-
+        $message = sprintf( $message, ...$args );
+        self::$messages[ $color ][] = $message;
+        Plugin::error( $message );
     }
 
 }

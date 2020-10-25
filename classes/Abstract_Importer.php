@@ -19,11 +19,10 @@ abstract class Abstract_Importer {
                     $message = sprintf( _n( '%s is missing property for the object %s with id = %s.', '%s are missing properties for the object %s with id = %s.', count( $diff ), $domain = 'kntnt-posts-import' ), join( ', ', $diff ), static::class, $object->id );
                 }
                 Plugin::error( $message );
-                Plugin::log( $object );
                 continue;
             }
             static::$all[ $object->id ] = new static( $object );
-            Plugin::log( 'Created %s from %s', static::class, $object );
+            Plugin::info( 'Created %s with id %s', static::class, $object->id );
         }
     }
 
@@ -36,7 +35,7 @@ abstract class Abstract_Importer {
         if ( $this->unsaved ) {
             $this->unsaved = false;
             $type = strtolower( substr( static::class, strrpos( static::class, '\\' ) + 1 ) );
-            Plugin::log( "Saving %s with id = %s", $type, $this->id );
+            Plugin::info( "Saving %s with id = %s", $type, $this->id );
             $ok = $this->_save();
             if ( ! $ok ) {
                 Plugin::error( 'Error while saving %s with id = %s. See above.', $type, $this->id );

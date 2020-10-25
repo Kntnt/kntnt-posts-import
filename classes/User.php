@@ -75,12 +75,16 @@ final class User extends Abstract_Importer {
 
         $ok = true;
 
+        // Allow developers save additional dependencies.
         $ok = apply_filters( 'kntnt-post-import-save-user-dependencies', $ok, $this );
+        if ( ! $ok ) {
+            Plugin::error( 'A `kntnt-post-import-save-user-dependencies` filter has failed.' );
+        }
 
-        if ( $ok && get_current_user_id() != $this->id ) {
+        if ( $ok ) {
 
             if ( $this->id_exists() ) {
-                Plugin::log( 'Deleting a pre-existing user with id = %s.', $this->id );
+                Plugin::info( 'Deleting a pre-existing user with id = %s.', $this->id );
                 $ok = wp_delete_user( $this->id );
                 if ( ! $ok ) {
                     Plugin::error( 'Failed to delete the pre-existing user with id = %s.', $this->id );
@@ -88,7 +92,7 @@ final class User extends Abstract_Importer {
             }
 
             if ( $ok ) {
-                Plugin::log( 'Create an empty user with id = %s.', $this->id );
+                Plugin::info( 'Create an empty user with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
                     Plugin::error( 'Failed to create user with id = %s.', $this->id );
@@ -101,7 +105,7 @@ final class User extends Abstract_Importer {
 
             $user = [
                 'ID' => $this->id,
-                'user_login' => $this->login,
+                'user_login' => $this->login, // Is required despite it is already set by create_id().
                 'user_pass' => $this->pass,
                 'user_nicename' => $this->nicename,
                 'user_email' => $this->email,
@@ -121,7 +125,7 @@ final class User extends Abstract_Importer {
                 'locale' => $this->locale,
             ];
 
-            Plugin::log( 'Update user with id = %s: %s', $this->id, $user );
+            Plugin::info( 'Update user with id = %s', $this->id );
             $response = wp_insert_user( $user );
             if ( is_wp_error( $response ) ) {
                 $ok = false;
@@ -135,7 +139,7 @@ final class User extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::log( "Saving metadata for user with id = %s", $this->id );
+            Plugin::info( "Saving metadata for user with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( add_metadata( 'user', $this->id, $field, $value ) ) {
@@ -153,6 +157,7 @@ final class User extends Abstract_Importer {
 
     }
 
+    /** @noinspection SqlResolve */
     private function id_exists() {
         global $wpdb;
         return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT ID FROM $wpdb->users WHERE ID = %d", $this->id ) );
@@ -160,7 +165,9 @@ final class User extends Abstract_Importer {
 
     private function create_id() {
         global $wpdb;
-        return (bool) $wpdb->insert( $wpdb->users, [ 'ID' => $this->id ] );
+        // The user property user_login isn't updated by wp_insert_user(),
+        // and must therefore be inserted in the database with the ID.
+        return (bool) $wpdb->insert( $wpdb->users, [ 'ID' => $this->id, 'user_login' => $this->login ] );
     }
 
 }

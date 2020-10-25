@@ -60,7 +60,7 @@ final class Term extends Abstract_Importer {
         if ( $ok ) {
 
             if ( $this->id_exists() ) {
-                Plugin::log( 'Deleting a pre-existing term with id = %s.', $this->id );
+                Plugin::info( 'Deleting a pre-existing term with id = %s.', $this->id );
                 $response = wp_delete_term( $this->id, $this->taxonomy );
                 if ( is_wp_error( $response ) ) {
                     $ok = false;
@@ -69,7 +69,7 @@ final class Term extends Abstract_Importer {
             }
 
             if ( $ok ) {
-                Plugin::log( 'Create an empty term with id = %s.', $this->id );
+                Plugin::info( 'Create an empty term with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
                     Plugin::error( 'Failed to create term with id = %s.', $this->id );
@@ -87,7 +87,7 @@ final class Term extends Abstract_Importer {
                 'description' => $this->description,
             ];
 
-            Plugin::log( 'Update term with id = %s: %s', $this->id, $term );
+            Plugin::info( 'Update term with id = %s', $this->id );
             $response = wp_update_term( $this->id, $this->taxonomy, $term );
             if ( is_wp_error( $response ) ) {
                 $ok = false;
@@ -106,7 +106,7 @@ final class Term extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::log( "Saving metadata for term with id = %s", $this->id );
+            Plugin::info( "Saving metadata for term with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( add_metadata( 'term', $this->id, $field, $value ) ) {
