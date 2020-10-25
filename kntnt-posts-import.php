@@ -19,17 +19,8 @@
 namespace Kntnt\Posts_Import;
 
 // Uncomment following line to debug this plugin except the Importer class.
-define( 'KNTNT_POSTS_IMPORT_DEBUG', true );
-
-set_error_handler( function ( $severity, $message, $file, $line ) {
-    if ( ! ( error_reporting() & $severity ) ) {
-        return;
-    }
-    throw new \ErrorException( $message, 0, $severity, $file, $line );
-} );
+// define( 'KNTNT_POSTS_IMPORT_DEBUG', true );
 
 require 'autoload.php';
-
-//include 'KNTNT.php';
 
 defined( 'WPINC' ) && new Plugin;
