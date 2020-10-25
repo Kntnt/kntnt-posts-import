@@ -27,7 +27,6 @@ class Importer {
     }
 
     public function run() {
-        @ini_set( 'max_execution_time', '0' );
         add_action( 'wp_ajax_' . Plugin::ns(), [ $this, 'handle' ] );
     }
 
@@ -48,6 +47,7 @@ class Importer {
         // rely on the quotes being there. Jeez…
         $import = trim( stripslashes_deep( $_POST['import'] ) );
 
+        @ini_set( 'max_execution_time', '0' );
         $t = time();
         Plugin::info( 'Begins importing posts.' );
         $this->import( $import );

@@ -52,7 +52,7 @@ final class Attachment extends Abstract_Importer {
         $ok = apply_filters( 'kntnt-post-import-save-attachment-dependencies', $ok, $this );
 
         if ( $ok && $this->id_exists() ) {
-            Plugin::info( 'Deleting a pre-existing attachment with id = %s.', $this->id );
+            Plugin::debug( 'Deleting a pre-existing attachment with id = %s.', $this->id );
             $ok = (bool) wp_delete_post( $this->id, true );
             if ( ! $ok ) {
                 Plugin::error( 'Failed to delete the older attachment or post with id = %s.', $this->id );
@@ -75,7 +75,7 @@ final class Attachment extends Abstract_Importer {
             if ( wp_mkdir_p( $dir = dirname( $dst ) ) ) {
                 if ( $src = @fopen( $this->src, 'r' ) ) {
                     if ( file_put_contents( $dst, $src ) ) {
-                        Plugin::info( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
+                        Plugin::debug( 'Successfully downloaded %s and saved it to %s.', $this->src, $dst );
                     }
                     else {
                         Plugin::error( 'Failed to save %s to %s.', $this->src, $dst );
@@ -115,7 +115,7 @@ final class Attachment extends Abstract_Importer {
                 'file' => $file,
             ];
 
-            Plugin::info( 'Create attachment with id = %s', $this->id );
+            Plugin::debug( 'Create attachment with id = %s', $this->id );
             $response = wp_insert_post( $attachment, true );
             if ( is_wp_error( $response ) ) {
                 Plugin::error( 'Failed to insert $attachment with id = %s: %s', $this->id, $response->get_error_messages() );
@@ -130,7 +130,7 @@ final class Attachment extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::info( "Saving metadata for attachment with id = %s", $this->id );
+            Plugin::debug( "Saving metadata for attachment with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( add_metadata( 'post', $this->id, $field, $value ) ) {
@@ -145,10 +145,17 @@ final class Attachment extends Abstract_Importer {
         }
 
         if ( $ok && $is_image ) {
-            Plugin::info( 'Generates images for various sizes from "%s".' );
+            Plugin::debug( 'Generates images for various sizes from "%s".' );
             $subsizes = wp_get_registered_image_subsizes();
             $subsizes = apply_filters( 'intermediate_image_sizes_advanced', $subsizes, $image_metadata, $this->id );
             _wp_make_subsizes( $subsizes, $dst, $image_metadata, $this->id );
+        }
+
+        if ( $ok ) {
+            Plugin::info( 'Attachment %s was successfully created.', $this->id );
+        }
+        else {
+            Plugin::info( 'Attachment %s couldn\'t be created.', $this->id );
         }
 
         return $ok;

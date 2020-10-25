@@ -84,7 +84,7 @@ final class User extends Abstract_Importer {
         if ( $ok ) {
 
             if ( $this->id_exists() ) {
-                Plugin::info( 'Deleting a pre-existing user with id = %s.', $this->id );
+                Plugin::debug( 'Deleting a pre-existing user with id = %s.', $this->id );
                 $ok = wp_delete_user( $this->id );
                 if ( ! $ok ) {
                     Plugin::error( 'Failed to delete the pre-existing user with id = %s.', $this->id );
@@ -92,7 +92,7 @@ final class User extends Abstract_Importer {
             }
 
             if ( $ok ) {
-                Plugin::info( 'Create an empty user with id = %s.', $this->id );
+                Plugin::debug( 'Create an empty user with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
                     Plugin::error( 'Failed to create user with id = %s.', $this->id );
@@ -125,7 +125,7 @@ final class User extends Abstract_Importer {
                 'locale' => $this->locale,
             ];
 
-            Plugin::info( 'Update user with id = %s', $this->id );
+            Plugin::debug( 'Update user with id = %s', $this->id );
             $response = wp_insert_user( $user );
             if ( is_wp_error( $response ) ) {
                 $ok = false;
@@ -139,7 +139,7 @@ final class User extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::info( "Saving metadata for user with id = %s", $this->id );
+            Plugin::debug( "Saving metadata for user with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( add_metadata( 'user', $this->id, $field, $value ) ) {
@@ -151,6 +151,13 @@ final class User extends Abstract_Importer {
                     }
                 }
             }
+        }
+
+        if ( $ok ) {
+            Plugin::info( 'User %s was successfully created.', $this->id );
+        }
+        else {
+            Plugin::info( 'User %s couldn\'t be created.', $this->id );
         }
 
         return $ok;

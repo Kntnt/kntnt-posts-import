@@ -71,10 +71,10 @@ final class Post extends Abstract_Importer {
 
         // Delete pre-existing post
         if ( $ok && $this->id_exists() ) {
-            Plugin::info( 'An older post exists with id = %s.', $this->id );
+            Plugin::debug( 'An older post exists with id = %s.', $this->id );
             $deleted_post = wp_delete_post( $this->id, true );
             if ( $deleted_post ) {
-                Plugin::info( 'Successfully deleted the older post with id = %s.', $this->id );
+                Plugin::debug( 'Successfully deleted the older post with id = %s.', $this->id );
             }
             else {
                 Plugin::error( 'Failed to delete the older post with id = %s.', $this->id );
@@ -101,7 +101,7 @@ final class Post extends Abstract_Importer {
                 '_thumbnail_id' => Plugin::peel_off( '_thumbnail_id', $this->metadata, [ 0 => '' ] )[0],
             ];
 
-            Plugin::info( 'Create post with id = %s', $this->id );
+            Plugin::debug( 'Create post with id = %s', $this->id );
             $response = wp_insert_post( $post, true );
             if ( is_wp_error( $response ) ) {
                 Plugin::error( 'Failed to insert post with id = %s: %s', $this->id, $response->get_error_messages() );
@@ -116,7 +116,7 @@ final class Post extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::info( "Saving metadata for post with id = %s", $this->id );
+            Plugin::debug( "Saving metadata for post with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( update_post_meta( $this->id, $field, $value ) ) {
@@ -128,6 +128,13 @@ final class Post extends Abstract_Importer {
                     }
                 }
             }
+        }
+
+        if ( $ok ) {
+            Plugin::info( 'Post %s was successfully created.', $this->id );
+        }
+        else {
+            Plugin::info( 'Post %s couldn\'t be created.', $this->id );
         }
 
         return $ok;
@@ -187,6 +194,7 @@ final class Post extends Abstract_Importer {
         return $ok;
     }
 
+    /** @noinspection SqlResolve */
     private function id_exists() {
         global $wpdb;
         return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE ID = %d", $this->id ) );

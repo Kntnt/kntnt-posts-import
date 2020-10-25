@@ -60,7 +60,7 @@ final class Term extends Abstract_Importer {
         if ( $ok ) {
 
             if ( $this->id_exists() ) {
-                Plugin::info( 'Deleting a pre-existing term with id = %s.', $this->id );
+                Plugin::debug( 'Deleting a pre-existing term with id = %s.', $this->id );
                 $response = wp_delete_term( $this->id, $this->taxonomy );
                 if ( is_wp_error( $response ) ) {
                     $ok = false;
@@ -69,7 +69,7 @@ final class Term extends Abstract_Importer {
             }
 
             if ( $ok ) {
-                Plugin::info( 'Create an empty term with id = %s.', $this->id );
+                Plugin::debug( 'Create an empty term with id = %s.', $this->id );
                 $ok = $this->create_id();
                 if ( ! $ok ) {
                     Plugin::error( 'Failed to create term with id = %s.', $this->id );
@@ -87,7 +87,7 @@ final class Term extends Abstract_Importer {
                 'description' => $this->description,
             ];
 
-            Plugin::info( 'Update term with id = %s', $this->id );
+            Plugin::debug( 'Update term with id = %s', $this->id );
             $response = wp_update_term( $this->id, $this->taxonomy, $term );
             if ( is_wp_error( $response ) ) {
                 $ok = false;
@@ -106,7 +106,7 @@ final class Term extends Abstract_Importer {
         }
 
         if ( $ok ) {
-            Plugin::info( "Saving metadata for term with id = %s", $this->id );
+            Plugin::debug( "Saving metadata for term with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( add_metadata( 'term', $this->id, $field, $value ) ) {
@@ -120,10 +120,18 @@ final class Term extends Abstract_Importer {
             }
         }
 
+        if ( $ok ) {
+            Plugin::info( 'Term %s was successfully created.', $this->id );
+        }
+        else {
+            Plugin::info( 'Term %s couldn\'t be created.', $this->id );
+        }
+
         return $ok;
 
     }
 
+    /** @noinspection SqlResolve */
     private function id_exists() {
         global $wpdb;
         return (bool) $wpdb->get_row( $wpdb->prepare( "SELECT tt.term_id, tt.term_taxonomy_id FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy as tt ON tt.term_id = t.term_id WHERE t.term_id = %d AND tt.taxonomy = %s", $this->id, $this->taxonomy ) );
