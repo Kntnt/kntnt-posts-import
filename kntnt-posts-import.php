@@ -8,7 +8,7 @@
  * Plugin URI:        https://www.kntnt.com/
  * GitHub Plugin URI: https://github.com/Kntnt/kntnt-post-import
  * Description:       Provides a tool to import posts with images, attachments, author, terms and metadata exported with Kntnt Posts Export.
- * Version:           0.3.0
+ * Version:           0.3.1
  * Author:            Thomas Barregren
  * Author URI:        https://www.kntnt.com/
  * License:           GPL-3.0+
