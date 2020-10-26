@@ -78,6 +78,7 @@ final class Plugin extends Abstract_Plugin {
             ],
             'ajax' => [
                 'admin_init' => [
+                    'Local_Loader',
                     'Importer',
                 ],
             ],

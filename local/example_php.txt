@@ -1,0 +1,48 @@
+<?php
+
+// Any file ending with .php will be included by when an import starts.
+// You can use it to implement actions and filters used by the importer.
+// Below follow examples on how it can be used.
+
+
+namespace Kntnt\Posts_Import\Local;
+
+
+// Import ACF field `lead` on posts.
+add_action( 'kntnt-posts-import-post-metadata', function ( $field, $value, $post ) {
+    if ( in_array( $field, [ 'lead', 'related_articles' ] ) ) {
+        update_field( $field, $value, $post->id );
+    }
+}, 10, 3 );
+
+
+// Import ACF field `archive_body` on terms.
+add_action( 'kntnt-posts-import-term-metadata', function ( $field, $value, $term ) {
+    if ( 'archive_body' == $field ) {
+        update_field( $field, $value, "{$term->taxonomy}_{$term->id}" );
+    }
+    //
+}, 10, 3 );
+
+
+// Import ACF field `avatar_manager_custom_avatar` on users.
+add_action( 'kntnt-posts-import-user-metadata', function ( $field, $value, $user ) {
+    if ( 'avatar_manager_custom_avatar' == $field ) {
+        update_field( $field, $value, "user_{$user->id}" );
+    }
+    //
+}, 10, 3 );
+
+
+// Save image referred to in the ACF field kntnt-posts-import-user-metadata.
+add_filter( 'kntnt-post-import-save-user-dependencies', function ( $ok, $user ) {
+    if ( $ok && isset( $user->metadata['avatar_manager_custom_avatar'] ) ) {
+        if ( $attachment = \Kntnt\Posts_Import\Attachment::get( $user->metadata['avatar_manager_custom_avatar'] ) ) {
+            $ok = $attachment->save();
+            if ( ! $ok ) {
+                \Kntnt\Posts_Import\Plugin::error( 'Error while saving attachment with id = %s. See above.', $attachment->id );
+            }
+        }
+    }
+    return $ok;
+}, 10, 2 );
