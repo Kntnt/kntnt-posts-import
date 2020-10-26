@@ -134,7 +134,7 @@ final class Attachment extends Abstract_Importer {
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( add_metadata( 'post', $this->id, $field, $value ) ) {
-                        do_action( 'kntnt-posts-import-attachment-metadata', $field, $value, $this->id );
+                        do_action( 'kntnt-posts-import-attachment-metadata', $field, $value, $this );
                     }
                     else {
                         Plugin::error( 'Failed to update attachment with id = %s with metadata: %s => %s', $this->id, $field, $value );

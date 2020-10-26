@@ -120,7 +120,7 @@ final class Post extends Abstract_Importer {
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( update_post_meta( $this->id, $field, $value ) ) {
-                        do_action( 'kntnt-posts-import-post-metadata', $field, $value, $this->id );
+                        do_action( 'kntnt-posts-import-post-metadata', $field, $value, $this );
                     }
                     else {
                         Plugin::error( 'Failed to update post with id = %s with metadata: %s => %s', $this->id, $field, $value );

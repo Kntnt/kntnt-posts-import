@@ -110,7 +110,7 @@ final class Term extends Abstract_Importer {
             foreach ( $this->metadata as $field => $values ) {
                 foreach ( $values as $value ) {
                     if ( add_metadata( 'term', $this->id, $field, $value ) ) {
-                        do_action( 'kntnt-posts-import-term-metadata', $field, $value, $this->id );
+                        do_action( 'kntnt-posts-import-term-metadata', $field, $value, $this );
                     }
                     else {
                         Plugin::error( 'Failed to update term with id = %s with metadata: %s => %s', $this->id, $field, $value );
