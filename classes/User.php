@@ -48,7 +48,19 @@ final class User extends Abstract_Importer {
 
     protected static $all = [];
 
+    protected static function dependencies_exists( $user ) {
+        return true;
+    }
+
     protected function __construct( $user ) {
+
+        $ok = true;
+
+        $ok = apply_filters( 'kntnt-posts-import-user-dependencies-check', $ok, $user );
+        if ( ! $ok ) {
+            Plugin::error( 'Can\'t import user with id = %s since not all dependencies are satisfied.', $user->id );
+        }
+
         $this->id = $user->id;
         $this->login = $user->login;
         $this->pass = $user->pass;

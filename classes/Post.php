@@ -39,6 +39,35 @@ final class Post extends Abstract_Importer {
 
     protected static $all = [];
 
+    protected static function dependencies_exists( $post ) {
+
+        $ok = true;
+
+        foreach ( (array) $post->terms as $taxonomy => $terms ) {
+            foreach ( $terms as $term ) {
+                if ( ! Term::get( $term ) ) {
+                    Plugin::error( 'Term with id = %s is missing.', $term );
+                    $ok = false;
+                }
+            }
+        }
+
+        if ( ! User::get( $post->author ) ) {
+            Plugin::error( 'Author with id = %s is missing.', $post->author );
+            $ok = false;
+        }
+
+        foreach ( (array) $post->attachments as $attachment ) {
+            if ( ! Attachment::get( $attachment ) ) {
+                Plugin::error( 'Attachment with id = %s is missing.', $attachment );
+                $ok = false;
+            }
+        }
+
+        return $ok;
+
+    }
+
     protected function __construct( $post ) {
         $this->id = $post->id;
         $this->slug = $post->slug;
@@ -165,12 +194,17 @@ final class Post extends Abstract_Importer {
                     if ( ! $term->save() ) {
                         Plugin::error( 'Error while saving term with id = %s. See above.', $term_id );
                         $ok = false;
+                        break;
                     }
                 }
                 else {
                     Plugin::error( 'No term with id = %s.', $term_id );
                     $ok = false;
+                    break;
                 }
+            }
+            if ( ! $ok ) {
+                break;
             }
         }
         return $ok;

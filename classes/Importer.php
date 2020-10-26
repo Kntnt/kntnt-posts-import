@@ -64,8 +64,8 @@ class Importer {
              ( $import = json_decode( $import ) ) !== null &&
              ! ( $property_diff = Plugin::property_diff( [ 'attachments', 'users', 'post_terms', 'posts' ], $import ) ) ) {
 
-            User::import( $import->users );
             Term::import( $import->post_terms );
+            User::import( $import->users );
             Attachment::import( $import->attachments );
             Post::import( $import->posts );
 

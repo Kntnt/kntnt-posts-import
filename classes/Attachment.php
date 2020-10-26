@@ -30,6 +30,19 @@ final class Attachment extends Abstract_Importer {
 
     protected static $all = [];
 
+    protected static function dependencies_exists( $attachment ) {
+
+        $ok = true;
+
+        if ( ! User::get( $attachment->author ) ) {
+            Plugin::error( 'Author with id = %s is missing.', $attachment->author );
+            $ok = false;
+        }
+
+        return $ok;
+
+    }
+
     protected function __construct( $attachment ) {
         $this->id = $attachment->id;
         $this->slug = $attachment->slug;
@@ -42,6 +55,15 @@ final class Attachment extends Abstract_Importer {
         $this->date = $attachment->date;
         $this->metadata = Plugin::objects_to_arrays( $attachment->metadata );
         $this->src = $attachment->src;
+    }
+
+    private static function author_exists( $attachment ) {
+        $ok = true;
+        if ( ! User::get( $attachment->author ) ) {
+            Plugin::error( 'Author with id = %s is missing.', $attachment->author );
+            $ok = false;
+        }
+        return $ok;
     }
 
     protected function _save() {

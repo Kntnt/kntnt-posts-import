@@ -21,8 +21,15 @@ abstract class Abstract_Importer {
                 Plugin::error( $message );
                 continue;
             }
-            static::$all[ $object->id ] = new static( $object );
-            Plugin::debug( 'Created %s with id %s', static::class, $object->id );
+            $ok = static::dependencies_exists( $object );
+            $ok = apply_filters( 'kntnt-posts-import-dependencies-check', $ok, $object, static::class );
+            if ( $ok ) {
+                static::$all[ $object->id ] = new static( $object );
+                Plugin::info( 'Imported %s with id %s', static::class, $object->id );
+            }
+            else {
+                Plugin::error( 'Failed to import %s with id %s; not all dependencies are satisfied.', static::class, $object->id );
+            }
         }
     }
 

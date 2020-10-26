@@ -24,7 +24,22 @@ final class Term extends Abstract_Importer {
 
     protected static $all = [];
 
+    protected static function dependencies_exists( $term ) {
+        static $taxonomies = null;
+        if ( is_null( $taxonomies ) ) {
+            $taxonomies = get_taxonomies();
+        }
+        return in_array( $term->taxonomy, $taxonomies );
+    }
+
     protected function __construct( $term ) {
+
+        $ok = true;
+
+        $ok = apply_filters( 'kntnt-posts-import-term-dependencies-check', $ok, $term );
+        if ( ! $ok ) {
+            Plugin::error( 'Can\'t import term with id = %s since not all dependencies are satisfied.', $term->id );
+        }
 
         $this->id = $term->id;
         $this->slug = $term->slug;
