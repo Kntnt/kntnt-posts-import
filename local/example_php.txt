@@ -1,8 +1,9 @@
 <?php
 
-// Any file ending with .php will be included by when an import starts.
-// You can use it to implement actions and filters used by the importer.
-// Below follow examples on how it can be used.
+// Any file ending with .php will be included when an import starts. You can use
+// it to implement actions and filters used by the importer. Below follow
+// examples on how it can be used. Alternatively, you can implement the actions
+// and filters on the action hook `kntnt-posts-import-load-local-files`.
 
 
 namespace Kntnt\Posts_Import\Local;

@@ -40,6 +40,9 @@ class Importer {
             wp_die( - 1, 403 );
         }
 
+        // Load local code.
+        do_action( 'kntnt-posts-import-add-local-code' );
+
         // The need for stripslashes() despite that Magic Quotes were
         // deprecated already in PHP 5.4 is due to WordPress backward
         // compatibility. WordPress roll their own version of "magic

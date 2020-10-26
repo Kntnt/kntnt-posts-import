@@ -78,8 +78,10 @@ final class Plugin extends Abstract_Plugin {
             ],
             'ajax' => [
                 'admin_init' => [
-                    'Local_Loader',
                     'Importer',
+                ],
+                'kntnt-posts-import-add-local-code' => [
+                    'Local_Loader',
                 ],
             ],
         ];
