@@ -1,9 +1,9 @@
+<?php /** @noinspection PhpUndefinedVariableInspection */ ?>
 <div class="wrap">
     <h2><?php echo $title; ?></h2>
-    <?php foreach ( $messages as $color => $m ): ?>
-        <?php foreach ( $m as $message ): ?>
-            <p style="color:<?php echo $color; ?>"><?php echo $message ?></p>
-        <?php endforeach; ?>
+    <?php foreach ( $messages as $message ): ?>
+        <?php $color = 'ERROR' == $message['context'] ? 'red' : 'green'; ?>
+        <p style="color:<?php echo $color; ?>"><?php echo $message['message'] ?></p>
     <?php endforeach; ?>
     <form method="post" enctype="multipart/form-data">
         <?php echo wp_nonce_field( $ns ); ?>

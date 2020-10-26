@@ -42,29 +42,29 @@ final class Tool_Page {
         if ( $_POST ) {
             if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'], Plugin::ns() ) ) {
                 if ( $_FILES['import_file']['error'] ) {
-                    $this->message( 'red', self::$file_upload_errors[ $_FILES['import_file']['error'] ] );
+                    $this->log( 'ERROR', self::$file_upload_errors[ $_FILES['import_file']['error'] ] );
                 }
                 else if ( 'application/json' != $_FILES['import_file']['type'] ) {
-                    $this->message( 'red', __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
+                    $this->log( 'ERROR', __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
                 }
                 else {
                     Plugin::debug( 'Uploaded "%s".', $_FILES['import_file']['name'] );
                     if ( $import = file_get_contents( $_FILES['import_file']['tmp_name'] ) ) {
                         $response = Importer::start( $import );
                         if ( is_wp_error( $response ) ) {
-                            $this->message( 'red', __( 'Failed to start background import: %s', 'kntnt-posts-import' ), $response->get_error_messages() );
+                            $this->log( 'ERROR', __( 'Failed to start background import: %s', 'kntnt-posts-import' ), $response->get_error_messages() );
                         }
                         else {
-                            $this->message( 'green', __( 'Successfully started background import. Check log file.', 'kntnt-posts-import' ) );
+                            $this->log( 'INFO', __( 'Successfully started background import. Check log file.', 'kntnt-posts-import' ) );
                         }
                     }
                     else {
-                        $this->message( 'red', __( 'Failed to read the uploaded file.', 'kntnt-posts-import' ) );
+                        $this->log( 'ERROR', __( 'Failed to read the uploaded file.', 'kntnt-posts-import' ) );
                     }
                 }
             }
             else {
-                $this->message( 'red', __( "The form has expired. Please, try again.", 'kntnt-posts-import' ) );
+                $this->log( 'ERROR', __( "The form has expired. Please, try again.", 'kntnt-posts-import' ) );
             }
         }
 
@@ -85,13 +85,13 @@ final class Tool_Page {
 
     }
 
-    private function message( $color, $message, ...$args ) {
-        foreach ( $args as &$arg ) {
-            $arg = Plugin::stringify( $arg );
-        }
-        $message = sprintf( $message, ...$args );
-        self::$messages[ $color ][] = $message;
-        Plugin::error( $message );
+    private function log( $context, $message, ...$args ) {
+        $message = sprintf( $message, ...array_map( [ Plugin::class, 'stringify' ], $args ) );
+        self::$messages[] = [
+            'context' => $context,
+            'message' => $message,
+        ];
+        Plugin::log( $context, $message );
     }
 
 }
