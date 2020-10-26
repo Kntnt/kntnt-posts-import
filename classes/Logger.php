@@ -7,22 +7,22 @@ namespace Kntnt\Posts_Import;
 trait Logger {
 
     public static function info( $message = '', ...$args ) {
-        self::_log( 'INFO', $message, ...$args );
+        return self::_log( 'INFO', $message, ...$args );
     }
 
     public static function error( $message = '', ...$args ) {
-        self::_log( 'ERROR', $message, ...$args );
+        return self::_log( 'ERROR', $message, ...$args );
     }
 
     public static function debug( $message = '', ...$args ) {
         if ( self::is_debugging() ) {
-            self::_log( 'DEBUG', $message, ...$args );
+            return self::_log( 'DEBUG', $message, ...$args );
         }
     }
 
     public static function log( $context, $message = '', ...$args ) {
         if ( in_array( strtoupper( $context ), [ 'INFO', 'ERROR' ] ) || self::is_debugging() ) {
-            self::_log( $context, $message, ...$args );
+            return self::_log( $context, $message, ...$args );
         }
     }
 
@@ -32,7 +32,7 @@ trait Logger {
     // Any percent sign that should be written must be escaped with another
     // percent sign, that is `%%`. The message is prefixed with [$context]
     // followed by […] where … is the qualified name of the function calling.
-    protected static function _log( $prefix, $message, ...$args ) {
+    protected static function _log( $context, $message, ...$args ) {
         if ( ! is_string( $message ) ) {
             $args = [ $message ];
             $message = '%s';
@@ -40,7 +40,12 @@ trait Logger {
         $caller = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 3 );
         $caller = $caller[2]['class'] . '->' . $caller[2]['function'] . '()';
         $message = sprintf( $message, ...array_map( [ Plugin::class, 'stringify' ], $args ) );
-        error_log( "[$prefix][$caller] $message" );
+        error_log( "[$context][$caller] $message" );
+        return [
+            'context' => $context,
+            'caller' => $caller,
+            'message' => $message,
+        ];
     }
 
     public static final function stringify( $val ) {

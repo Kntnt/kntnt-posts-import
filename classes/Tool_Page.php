@@ -42,29 +42,29 @@ final class Tool_Page {
         if ( $_POST ) {
             if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'], Plugin::ns() ) ) {
                 if ( $_FILES['import_file']['error'] ) {
-                    $this->log( 'ERROR', self::$file_upload_errors[ $_FILES['import_file']['error'] ] );
+                    self::$messages[] = Plugin::error( self::$file_upload_errors[ $_FILES['import_file']['error'] ] );
                 }
                 else if ( 'application/json' != $_FILES['import_file']['type'] ) {
-                    $this->log( 'ERROR', __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
+                    self::$messages[] = Plugin::error( __( 'You must upload a JSON-file.', 'kntnt-posts-import' ) );
                 }
                 else {
                     Plugin::debug( 'Uploaded "%s".', $_FILES['import_file']['name'] );
                     if ( $import = file_get_contents( $_FILES['import_file']['tmp_name'] ) ) {
                         $response = Importer::start( $import );
                         if ( is_wp_error( $response ) ) {
-                            $this->log( 'ERROR', __( 'Failed to start background import: %s', 'kntnt-posts-import' ), $response->get_error_messages() );
+                            self::$messages[] = Plugin::error( __( 'Failed to start background import: %s', 'kntnt-posts-import' ), $response->get_error_messages() );
                         }
                         else {
-                            $this->log( 'INFO', __( 'Successfully started background import. Check log file.', 'kntnt-posts-import' ) );
+                            self::$messages[] = Plugin::info( __( 'Successfully started background import. Check log file.', 'kntnt-posts-import' ) );
                         }
                     }
                     else {
-                        $this->log( 'ERROR', __( 'Failed to read the uploaded file.', 'kntnt-posts-import' ) );
+                        self::$messages[] = Plugin::error( __( 'Failed to read the uploaded file.', 'kntnt-posts-import' ) );
                     }
                 }
             }
             else {
-                $this->log( 'ERROR', __( "The form has expired. Please, try again.", 'kntnt-posts-import' ) );
+                self::$messages[] = Plugin::error( __( "The form has expired. Please, try again.", 'kntnt-posts-import' ) );
             }
         }
 
@@ -83,15 +83,6 @@ final class Tool_Page {
             'messages' => self::$messages,
         ] );
 
-    }
-
-    private function log( $context, $message, ...$args ) {
-        $message = sprintf( $message, ...array_map( [ Plugin::class, 'stringify' ], $args ) );
-        self::$messages[] = [
-            'context' => $context,
-            'message' => $message,
-        ];
-        Plugin::log( $context, $message );
     }
 
 }
