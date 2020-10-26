@@ -22,7 +22,7 @@ abstract class Abstract_Importer {
                 continue;
             }
             static::$all[ $object->id ] = new static( $object );
-            Plugin::info( 'Created %s with id %s', static::class, $object->id );
+            Plugin::debug( 'Created %s with id %s', static::class, $object->id );
         }
     }
 
@@ -35,7 +35,7 @@ abstract class Abstract_Importer {
         if ( $this->unsaved ) {
             $this->unsaved = false;
             $type = strtolower( substr( static::class, strrpos( static::class, '\\' ) + 1 ) );
-            Plugin::info( "Saving %s with id = %s", $type, $this->id );
+            Plugin::debug( "Saving %s with id = %s", $type, $this->id );
             $ok = $this->_save();
             if ( ! $ok ) {
                 Plugin::error( 'Error while saving %s with id = %s. See above.', $type, $this->id );
