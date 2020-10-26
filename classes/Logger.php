@@ -6,6 +6,22 @@ namespace Kntnt\Posts_Import;
 
 trait Logger {
 
+    public static final function stringify( $val ) {
+        if ( is_null( $val ) ) {
+            $out = 'NULL';
+        }
+        else if ( is_bool( $val ) ) {
+            $out = $val ? 'TRUE' : 'FALSE';
+        }
+        else if ( is_array( $val ) || is_object( $val ) ) {
+            $out = print_r( $val, true );
+        }
+        else {
+            $out = (string) $val;
+        }
+        return $out;
+    }
+
     public static function info( $message = '', ...$args ) {
         return self::_log( 'INFO', $message, ...$args );
     }
@@ -26,6 +42,19 @@ trait Logger {
         }
     }
 
+    public static final function trace( $message = '', ...$args ) {
+        if ( ! is_string( $message ) ) {
+            $args = [ $message ];
+            $message = '%s';
+        }
+        $message = sprintf( $message, ...array_map( [ Plugin::class, 'stringify' ], $args ) );
+        $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
+        self::_echo( '[TRACE][#1]', $trace[1], $message );
+        for ( $i = 2; $i < count( $trace ); ++ $i ) {
+            self::_echo( "[TRACE][#{$i}]", $trace[ $i ] );
+        }
+    }
+
     // If `$message` isn't a string, its value is printed. If `$message` is
     // a string, it is written with each occurrence of '%s' replaced with
     // the value of the corresponding additional argument converted to string.
@@ -37,31 +66,21 @@ trait Logger {
             $args = [ $message ];
             $message = '%s';
         }
-        $caller = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 3 );
-        $caller = $caller[2]['class'] . '->' . $caller[2]['function'] . '()';
         $message = sprintf( $message, ...array_map( [ Plugin::class, 'stringify' ], $args ) );
-        error_log( "[$context][$caller] $message" );
+        $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 3 );
+        self::_echo( "[$context]", $trace[1], $message );
         return [
             'context' => $context,
-            'caller' => $caller,
             'message' => $message,
         ];
     }
 
-    public static final function stringify( $val ) {
-        if ( is_null( $val ) ) {
-            $out = 'NULL';
+    private static function _echo( $prefix, $step, $message = '' ) {
+        $caller = $step['function'];
+        if ( isset( $step['class'] ) ) {
+            $caller = $step['class'] . $step['type'] . $caller;
         }
-        else if ( is_bool( $val ) ) {
-            $out = $val ? 'TRUE' : 'FALSE';
-        }
-        else if ( is_array( $val ) || is_object( $val ) ) {
-            $out = print_r( $val, true );
-        }
-        else {
-            $out = (string) $val;
-        }
-        return $out;
+        error_log( "{$prefix}[$caller]" . ( $message ? " $message" : '' ) );
     }
 
 }
