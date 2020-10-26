@@ -6,15 +6,23 @@ namespace Kntnt\Posts_Import;
 
 trait Logger {
 
-    // If `$message` isn't a string, its value is printed. If `$message` is
-    // a string, it is written with each occurrence of '%s' replaced with
-    // the value of the corresponding additional argument converted to string.
-    // Any percent sign that should be written must be escaped with another
-    // percent sign, that is `%%`. This method do nothing if debug flag isn't
-    // set.
+    public static function info( $message = '', ...$args ) {
+        self::_log( 'INFO', $message, ...$args );
+    }
+
+    public static function error( $message = '', ...$args ) {
+        self::_log( 'ERROR', $message, ...$args );
+    }
+
     public static function debug( $message = '', ...$args ) {
         if ( self::is_debugging() ) {
             self::_log( 'DEBUG', $message, ...$args );
+        }
+    }
+
+    public static function log( $context, $message = '', ...$args ) {
+        if ( in_array( strtoupper( $context ), [ 'INFO', 'ERROR' ] ) || self::is_debugging() ) {
+            self::_log( $context, $message, ...$args );
         }
     }
 
@@ -22,20 +30,17 @@ trait Logger {
     // a string, it is written with each occurrence of '%s' replaced with
     // the value of the corresponding additional argument converted to string.
     // Any percent sign that should be written must be escaped with another
-    // percent sign, that is `%%`. This method works independent of
-    // the debug flag.
-    public static function info( $message = '', ...$args ) {
-        self::_log( 'INFO', $message, ...$args );
-    }
-
-    // If `$message` isn't a string, its value is printed. If `$message` is
-    // a string, it is written with each occurrence of '%s' replaced with
-    // the value of the corresponding additional argument converted to string.
-    // Any percent sign that should be written must be escaped with another
-    // percent sign, that is `%%`. This method works independent of
-    // the debug flag.
-    public static function error( $message = '', ...$args ) {
-        self::_log( 'ERROR', $message, ...$args );
+    // percent sign, that is `%%`. The message is prefixed with [$context]
+    // followed by […] where … is the qualified name of the function calling.
+    protected static function _log( $prefix, $message, ...$args ) {
+        if ( ! is_string( $message ) ) {
+            $args = [ $message ];
+            $message = '%s';
+        }
+        $caller = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 3 );
+        $caller = $caller[2]['class'] . '->' . $caller[2]['function'] . '()';
+        $message = sprintf( $message, ...array_map( [ Plugin::class, 'stringify' ], $args ) );
+        error_log( "[$prefix][$caller] $message" );
     }
 
     public static final function stringify( $val ) {
@@ -52,20 +57,6 @@ trait Logger {
             $out = (string) $val;
         }
         return $out;
-    }
-
-    protected static function _log( $prefix, $message, ...$args ) {
-        if ( ! is_string( $message ) ) {
-            $args = [ $message ];
-            $message = '%s';
-        }
-        $caller = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 3 );
-        $caller = $caller[2]['class'] . '->' . $caller[2]['function'] . '()';
-        foreach ( $args as &$arg ) {
-            $arg = self::stringify( $arg );
-        }
-        $message = sprintf( $message, ...$args );
-        error_log( "[$prefix] $caller: $message" );
     }
 
 }
