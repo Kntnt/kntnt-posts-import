@@ -147,7 +147,7 @@ final class Post extends Abstract_Importer {
         if ( $ok ) {
             Plugin::debug( "Saving metadata for post with id = %s", $this->id );
             foreach ( $this->metadata as $field => $values ) {
-                foreach ( $values as $value ) {
+                foreach ( array_unique( $values ) as $value ) {
                     if ( update_post_meta( $this->id, $field, $value ) ) {
                         do_action( 'kntnt-posts-import-post-metadata', $field, $value, $this );
                     }
