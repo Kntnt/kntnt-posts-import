@@ -33,7 +33,7 @@ final class Post extends Abstract_Importer {
     public static function save_all() {
         krsort( self::$all );
         foreach ( self::$all as $post ) {
-            $ok = $post->save();
+            $post->save();
         }
     }
 
