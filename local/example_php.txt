@@ -22,7 +22,6 @@ add_action( 'kntnt-posts-import-term-metadata', function ( $field, $value, $term
     if ( 'archive_body' == $field ) {
         update_field( $field, $value, "{$term->taxonomy}_{$term->id}" );
     }
-    //
 }, 10, 3 );
 
 
