@@ -34,8 +34,14 @@ final class Term extends Abstract_Importer {
 
     protected function __construct( $term ) {
 
-        $ok = true;
+        // Restore associative arrays that was exported as objects.
+        $term->metadata = Plugin::objects_to_arrays( $term->metadata );
 
+        // Allow developers to modify imported data.
+        $term = apply_filters( 'kntnt-posts-import-term', $term );
+
+        // Allow developers to check additional dependencies.
+        $ok = true;
         $ok = apply_filters( 'kntnt-posts-import-term-dependencies-check', $ok, $term );
         if ( ! $ok ) {
             Plugin::error( 'Can\'t import term with id = %s since not all dependencies are satisfied.', $term->id );
@@ -65,6 +71,7 @@ final class Term extends Abstract_Importer {
 
         $ok = true;
 
+        // Allow developers save additional dependencies.
         $ok = apply_filters( 'kntnt-post-import-save-term-dependencies', $ok, $this );
 
         if ( ! taxonomy_exists( $this->taxonomy ) ) {

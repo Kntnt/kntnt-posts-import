@@ -54,8 +54,14 @@ final class User extends Abstract_Importer {
 
     protected function __construct( $user ) {
 
-        $ok = true;
+        // Restore associative arrays that was exported as objects.
+        $user->metadata = Plugin::objects_to_arrays( $user->metadata );
 
+        // Allow developers to modify imported data.
+        $user = apply_filters( 'kntnt-posts-import-user', $user );
+
+        // Allow developers to check additional dependencies.
+        $ok = true;
         $ok = apply_filters( 'kntnt-posts-import-user-dependencies-check', $ok, $user );
         if ( ! $ok ) {
             Plugin::error( 'Can\'t import user with id = %s since not all dependencies are satisfied.', $user->id );
@@ -80,7 +86,8 @@ final class User extends Abstract_Importer {
         $this->admin_color = $user->admin_color;
         $this->show_admin_bar_front = $user->show_admin_bar_front;
         $this->locale = $user->locale;
-        $this->metadata = Plugin::objects_to_arrays( $user->metadata );
+        $this->metadata = $user->metadata;
+
     }
 
     protected function _save() {

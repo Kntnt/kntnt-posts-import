@@ -9,6 +9,17 @@
 namespace Kntnt\Posts_Import\Local;
 
 
+// Rename metadata field `avatar_manager_custom_avatar`, created by the plugin
+// Avatar Manager, to `kntnt-avatar`, used by the plugin Kntnt Avatar (see
+// https://github.com/Kntnt/kntnt-avatar).
+add_action( 'kntnt-posts-import-user', function ( $user ) {
+    if ( array_key_exists( 'avatar_manager_custom_avatar', $user->metadata ) ) {
+        $user->metadata['kntnt-avatar'] = $user->metadata['avatar_manager_custom_avatar'];
+        unset( $user->metadata['avatar_manager_custom_avatar'] );
+    }
+    return $user;
+}, 10, 1 );
+
 // Import ACF field `lead` on posts.
 add_action( 'kntnt-posts-import-post-metadata', function ( $field, $value, $post ) {
     if ( in_array( $field, [ 'lead', 'related_articles' ] ) ) {
@@ -16,28 +27,24 @@ add_action( 'kntnt-posts-import-post-metadata', function ( $field, $value, $post
     }
 }, 10, 3 );
 
-
-// Import ACF field `archive_body` on terms.
+// Import an ACF field `archive_body` on terms.
 add_action( 'kntnt-posts-import-term-metadata', function ( $field, $value, $term ) {
     if ( 'archive_body' == $field ) {
         update_field( $field, $value, "{$term->taxonomy}_{$term->id}" );
     }
 }, 10, 3 );
 
-
-// Import ACF field `avatar_manager_custom_avatar` on users.
+// Import an ACF field `kntnt-avatar` on users.
 add_action( 'kntnt-posts-import-user-metadata', function ( $field, $value, $user ) {
-    if ( 'avatar_manager_custom_avatar' == $field ) {
+    if ( 'kntnt-avatar' == $field ) {
         update_field( $field, $value, "user_{$user->id}" );
     }
-    //
 }, 10, 3 );
-
 
 // Save image referred to in the ACF field kntnt-posts-import-user-metadata.
 add_filter( 'kntnt-post-import-save-user-dependencies', function ( $ok, $user ) {
     if ( $ok && isset( $user->metadata['avatar_manager_custom_avatar'] ) ) {
-        if ( $attachment = \Kntnt\Posts_Import\Attachment::get( $user->metadata['avatar_manager_custom_avatar'] ) ) {
+        if ( $attachment = \Kntnt\Posts_Import\Attachment::get( $user->metadata['avatar_manager_custom_avatar'][0] ) ) {
             $ok = $attachment->save();
             if ( ! $ok ) {
                 \Kntnt\Posts_Import\Plugin::error( 'Error while saving attachment with id = %s. See above.', $attachment->id );

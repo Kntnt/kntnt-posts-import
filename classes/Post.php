@@ -69,6 +69,21 @@ final class Post extends Abstract_Importer {
     }
 
     protected function __construct( $post ) {
+
+        // Restore associative arrays that was exported as objects.
+        $post->metadata = Plugin::objects_to_arrays( $post->metadata );
+        $post->terms = Plugin::objects_to_arrays( $post->terms );
+
+        // Allow developers to modify imported data.
+        $post = apply_filters( 'kntnt-posts-import-post', $post );
+
+        // Allow developers to check additional dependencies.
+        $ok = true;
+        $ok = apply_filters( 'kntnt-posts-import-post-dependencies-check', $ok, $post );
+        if ( ! $ok ) {
+            Plugin::error( 'Can\'t import post with id = %s since not all dependencies are satisfied.', $post->id );
+        }
+
         $this->id = $post->id;
         $this->slug = $post->slug;
         $this->guid = $post->guid;
@@ -81,6 +96,7 @@ final class Post extends Abstract_Importer {
         $this->terms = Plugin::objects_to_arrays( $post->terms );
         $this->attachments = $post->attachments;
         $this->metadata = Plugin::objects_to_arrays( $post->metadata );
+
     }
 
     protected function _save() {

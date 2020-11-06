@@ -44,6 +44,20 @@ final class Attachment extends Abstract_Importer {
     }
 
     protected function __construct( $attachment ) {
+
+        // Restore associative arrays that was exported as objects.
+        $attachment->metadata = Plugin::objects_to_arrays( $attachment->metadata );
+
+        // Allow developers to modify imported data.
+        $attachment = apply_filters( 'kntnt-posts-import-attachment', $attachment );
+
+        // Allow developers to check additional dependencies.
+        $ok = true;
+        $ok = apply_filters( 'kntnt-posts-import-attachment-dependencies-check', $ok, $attachment );
+        if ( ! $ok ) {
+            Plugin::error( 'Can\'t import attachment with id = %s since not all dependencies are satisfied.', $attachment->id );
+        }
+
         $this->id = $attachment->id;
         $this->slug = $attachment->slug;
         $this->guid = $attachment->guid;
@@ -55,6 +69,7 @@ final class Attachment extends Abstract_Importer {
         $this->date = $attachment->date;
         $this->metadata = Plugin::objects_to_arrays( $attachment->metadata );
         $this->src = $attachment->src;
+
     }
 
     private static function author_exists( $attachment ) {
@@ -70,7 +85,10 @@ final class Attachment extends Abstract_Importer {
 
         $ok = true;
 
+        // Save dependencies.
         $ok &= $this->save_author();
+
+        // Allow developers save additional dependencies.
         $ok = apply_filters( 'kntnt-post-import-save-attachment-dependencies', $ok, $this );
 
         if ( $ok && $this->id_exists() ) {
