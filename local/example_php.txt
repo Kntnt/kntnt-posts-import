@@ -1,12 +1,11 @@
 <?php
 
-// Any file ending with .php will be included when an import starts. You can use
-// it to implement actions and filters used by the importer. Below follow
-// examples on how it can be used. Alternatively, you can implement the actions
-// and filters on the action hook `kntnt-posts-import-load-local-files`.
+// Any file ending with .php will be included by when an import starts.
+// You can use it to implement actions and filters used by the importer.
+// Below follow examples on how it can be used.
 
 
-namespace Kntnt\Posts_Import\Local;
+namespace Kntnt\Posts_Import;
 
 
 // Rename metadata field `avatar_manager_custom_avatar`, created by the plugin
@@ -19,6 +18,13 @@ add_action( 'kntnt-posts-import-user', function ( $user ) {
     }
     return $user;
 }, 10, 1 );
+
+// Import an ACF field `portrait` for users.
+add_action( 'kntnt-posts-import-user-metadata', function ( $field, $value, $user ) {
+    if ( 'portrait' == $field ) {
+        update_field( $field, $value, "user_{$user->id}" );
+    }
+}, 10, 3 );
 
 // Import ACF field `lead` on posts.
 add_action( 'kntnt-posts-import-post-metadata', function ( $field, $value, $post ) {
@@ -34,17 +40,10 @@ add_action( 'kntnt-posts-import-term-metadata', function ( $field, $value, $term
     }
 }, 10, 3 );
 
-// Import an ACF field `kntnt-avatar` on users.
-add_action( 'kntnt-posts-import-user-metadata', function ( $field, $value, $user ) {
-    if ( 'kntnt-avatar' == $field ) {
-        update_field( $field, $value, "user_{$user->id}" );
-    }
-}, 10, 3 );
-
 // Save image referred to in the ACF field kntnt-posts-import-user-metadata.
 add_filter( 'kntnt-post-import-save-user-dependencies', function ( $ok, $user ) {
-    if ( $ok && isset( $user->metadata['avatar_manager_custom_avatar'] ) ) {
-        if ( $attachment = \Kntnt\Posts_Import\Attachment::get( $user->metadata['avatar_manager_custom_avatar'][0] ) ) {
+    if ( $ok && isset( $user->metadata['portrait'] ) ) {
+        if ( $attachment = \Kntnt\Posts_Import\Attachment::get( $user->metadata['portrait'][0] ) ) {
             $ok = $attachment->save();
             if ( ! $ok ) {
                 \Kntnt\Posts_Import\Plugin::error( 'Error while saving attachment with id = %s. See above.', $attachment->id );
