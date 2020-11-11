@@ -10,11 +10,11 @@ namespace Kntnt\Posts_Import\Local;
 
 
 // Rename metadata field `avatar_manager_custom_avatar`, created by the plugin
-// Avatar Manager, to `kntnt-author-avatar`, used by the plugin Kntnt Author
+// Avatar Manager, to `portrait`, used by the plugin Kntnt Author
 // (see https://github.com/Kntnt/kntnt-author).
 add_action( 'kntnt-posts-import-user', function ( $user ) {
     if ( array_key_exists( 'avatar_manager_custom_avatar', $user->metadata ) ) {
-        $user->metadata['kntnt-author-avatar'] = $user->metadata['avatar_manager_custom_avatar'];
+        $user->metadata['portrait'] = $user->metadata['avatar_manager_custom_avatar'];
         unset( $user->metadata['avatar_manager_custom_avatar'] );
     }
     return $user;
